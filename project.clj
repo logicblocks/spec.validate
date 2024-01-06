@@ -1,4 +1,4 @@
-(defproject io.logicblocks/spec.validate "0.2.0-RC0"
+(defproject io.logicblocks/spec.validate "0.2.0-RC1"
   :description "A clojure.spec based validation library."
   :url "https://github.com/logicblocks/spec.validate"
 
