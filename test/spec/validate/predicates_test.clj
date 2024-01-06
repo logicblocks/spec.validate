@@ -1,9 +1,9 @@
-(ns spec-validate.predicates-test
+(ns spec.validate.predicates-test
   (:refer-clojure :exclude [uuid? zero? string?])
   (:require
     [clojure.test :refer :all]
 
-    [spec-validate.predicates
+    [spec.validate.predicates
      :refer [uuid-v4?
 
              absolute-url?

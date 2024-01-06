@@ -1,4 +1,4 @@
-(ns spec-validate.core
+(ns spec.validate.core
   (:require
     [clojure.spec.alpha :as spec]))
 

@@ -1,4 +1,4 @@
-(ns spec-validate.predicates
+(ns spec.validate.predicates
   (:refer-clojure :exclude [uuid? zero? string? boolean? integer?])
   (:require
     [valip.predicates :as valip-predicates]

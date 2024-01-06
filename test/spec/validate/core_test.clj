@@ -1,10 +1,10 @@
-(ns spec-validate.core-test
+(ns spec.validate.core-test
   (:refer-clojure :exclude [string? number?])
   (:require
     [clojure.test :refer :all]
     [clojure.spec.alpha :as spec]
 
-    [spec-validate.core :refer :all]))
+    [spec.validate.core :refer :all]))
 
 (def string?
   ^{:spec-validate/requirement :must-be-a-string}
