@@ -1,6 +1,6 @@
 (ns spec.validate.core
   (:require
-    [clojure.spec.alpha :as spec]))
+   [clojure.spec.alpha :as spec]))
 
 (defn- predicate-details [pred]
   (vec (get (vec pred) 2)))

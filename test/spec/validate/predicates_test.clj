@@ -1,38 +1,38 @@
 (ns spec.validate.predicates-test
-  (:refer-clojure :exclude [uuid? zero? string?])
+  (:refer-clojure :exclude [boolean? integer? uuid? zero? string?])
   (:require
-    [clojure.test :refer :all]
+   [clojure.test :refer :all]
 
-    [spec.validate.predicates
-     :refer [uuid-v4?
+   [spec.validate.predicates
+    :refer [uuid-v4?
 
-             absolute-url?
+            absolute-url?
 
-             string?
-             boolean?
-             content?
-             digits?
+            string?
+            boolean?
+            content?
+            digits?
 
-             integer?
-             positive?
-             negative?
-             zero?
+            integer?
+            positive?
+            negative?
+            zero?
 
-             not-empty?
-             length-equal-to?
-             length-less-than?
-             length-greater-than?
+            not-empty?
+            length-equal-to?
+            length-less-than?
+            length-greater-than?
 
-             iso8601-datetime?
+            iso8601-datetime?
 
-             currency-amount?
-             currency-code?
+            currency-amount?
+            currency-code?
 
-             postcode?
+            postcode?
 
-             phone-number?
+            phone-number?
 
-             email-address?]]))
+            email-address?]]))
 
 ;; identifiers
 (deftest for-uuid-v4?
@@ -296,7 +296,7 @@
 (deftest for-length-less-than?
   (testing "returns a validator that"
     (testing
-      "returns true when the provided string has length less than specified"
+     "returns true when the provided string has length less than specified"
       (let [target "abcdef"
             length-less-than-10? (length-less-than? 10)]
         (is (true? (length-less-than-10? target)))))
@@ -307,7 +307,7 @@
         (is (false? (length-less-than-10? target)))))
 
     (testing
-      "returns false when the provided string length greater than specified"
+     "returns false when the provided string length greater than specified"
       (let [target "abcdefghijkl"
             length-less-than-10? (length-less-than? 10)]
         (is (false? (length-less-than-10? target)))))
@@ -325,7 +325,7 @@
 (deftest for-length-greater-than?
   (testing "returns a validator that"
     (testing
-      "returns true when the provided string has length greater than specified"
+     "returns true when the provided string has length greater than specified"
       (let [target "abcdefghijk"
             length-greater-than-10? (length-greater-than? 10)]
         (is (true? (length-greater-than-10? target)))))
@@ -336,7 +336,7 @@
         (is (false? (length-greater-than-10? target)))))
 
     (testing
-      "returns false when the provided string length less than specified"
+     "returns false when the provided string length less than specified"
       (let [target "abcdef"
             length-greater-than-10? (length-greater-than? 10)]
         (is (false? (length-greater-than-10? target)))))
@@ -376,7 +376,7 @@
       (is (true? (currency-amount? target)))))
 
   (testing
-    "returns false when provided string does not represent a currency amount"
+   "returns false when provided string does not represent a currency amount"
     (let [target "the quick brown fox"]
       (is (false? (currency-amount? target)))))
 
@@ -394,7 +394,7 @@
       (is (true? (currency-code? target)))))
 
   (testing
-    "returns false when provided string does not represent a currency code"
+   "returns false when provided string does not represent a currency code"
     (let [target "the quick brown fox"]
       (is (false? (currency-code? target)))))
 
@@ -431,7 +431,7 @@
       (is (true? (phone-number? target)))))
 
   (testing
-    "returns false when provided string does not represent a phone number"
+   "returns false when provided string does not represent a phone number"
     (let [target "the quick brown fox"]
       (is (false? (phone-number? target)))))
 
@@ -444,13 +444,13 @@
       (is (false? (phone-number? target))))))
 
 ;; email address
-(deftest for-phone-number?
+(deftest for-email-address?
   (testing "returns true when provided string is a valid email address"
     (let [target "person@example.com"]
       (is (true? (email-address? target)))))
 
   (testing
-    "returns false when provided string does not represent an email address"
+   "returns false when provided string does not represent an email address"
     (let [target "the quick brown fox"]
       (is (false? (email-address? target)))))
 
