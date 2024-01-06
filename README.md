@@ -1,4 +1,4 @@
-# spec-validate
+# spec.validate
 
 A clojure.spec based validation library.
 
@@ -7,12 +7,12 @@ A clojure.spec based validation library.
 Add the following to your `project.clj` file:
 
 ```clj
-[b-social/spec-validate "0.1.9"]
+[io.logicblocks/spec.validate "0.2.0-RC0"]
 ```
 
 ## Documentation
 
-* [API Docs](http://b-social.github.io/spec-validate)
+* [API Docs](http://logicblocks.github.io/spec.validate)
 
 ## Usage
 
@@ -20,7 +20,6 @@ TODO: Add usage.
 
 ## License
 
-Copyright © 2019 B-Social Ltd.
+Copyright © 2024 LogicBlocks Maintainers.
 
-Distributed under the terms of the 
-[MIT License](http://opensource.org/licenses/MIT).
+Distributed under the MIT license.
