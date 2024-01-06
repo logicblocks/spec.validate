@@ -78,7 +78,7 @@ namespace :keys do
         name_prefix: 'gpg',
         owner_name: 'LogicBlocks Maintainers',
         owner_email: 'maintainers@logicblocks.io',
-        owner_comment: 'vent CI Key'
+        owner_comment: 'spec.validate CI Key'
       )
     end
 
@@ -119,7 +119,7 @@ end
 
 RakeCircleCI.define_project_tasks(
   namespace: :circle_ci,
-  project_slug: 'github/logicblocks/vent'
+  project_slug: 'github/logicblocks/spec.validate'
 ) do |t|
   circle_ci_config =
     YAML.load_file('config/secrets/circle_ci/config.yaml')
@@ -141,7 +141,7 @@ end
 
 RakeGithub.define_repository_tasks(
   namespace: :github,
-  repository: 'logicblocks/vent'
+  repository: 'logicblocks/spec.validate'
 ) do |t|
   github_config =
     YAML.load_file('config/secrets/github/config.yaml')
