@@ -9,6 +9,19 @@
     [spec.validate.unicode :as sv-unicode]
     [spec.validate.utils :as sv-utils]))
 
+(defn- gen-character-string-unicode [pattern]
+  (let [ranges (sv-unicode/unicode-codepoint-ranges pattern)
+        generators (map #(apply gen/choose %) ranges)]
+    (gen/fmap
+      (fn [^long i] (Character/toString i))
+      (apply gen/one-of [generators]))))
+
+(defn- gen-string-unicode [pattern]
+  (gen/fmap clojure.string/join
+    (gen/vector (gen-character-string-unicode pattern))))
+
+
+;; string?
 (defn string?
   "Returns true if the provided value is a string, else returns false."
   [value]
@@ -34,6 +47,8 @@
         (spec/spec form)
         #(gen/gen-for-pred clojure.core/string?))))})
 
+
+;; blank?
 (defn blank?
   "Returns true if the provided value is an empty string or a string containing
   only whitespace characters, else returns false."
@@ -46,17 +61,6 @@
   [_]
   :must-be-a-blank-string)
 
-(defn- gen-character-string-unicode [pattern]
-  (let [ranges (sv-unicode/unicode-codepoint-ranges pattern)
-        generators (map #(apply gen/choose %) ranges)]
-    (gen/fmap
-      (fn [^long i] (Character/toString i))
-      (apply gen/one-of [generators]))))
-
-(defn- gen-string-unicode [pattern]
-  (gen/fmap clojure.string/join
-    (gen/vector (gen-character-string-unicode pattern))))
-
 (extend (type blank?)
   spec/Specize
   {:specize*
@@ -67,6 +71,8 @@
         (spec/spec form)
         #(gen-string-unicode sv-unicode/whitespace-pattern))))})
 
+
+;; not-blank?
 (defn not-blank?
   "Returns true if the provided value is a string containing non-whitespace
   characters, else returns false."
@@ -78,6 +84,18 @@
   [_]
   :must-be-a-non-blank-string)
 
+(extend (type not-blank?)
+  spec/Specize
+  {:specize*
+   (fn
+     ([f] (spec/specize* f not-blank?))
+     ([_ form]
+      (spec/with-gen
+        (spec/spec form)
+        #(gen-string-unicode sv-unicode/non-whitespace-pattern))))})
+
+
+;; digits?
 (def ^:private digits-regex #"^\d*$")
 
 (defn digits?
