@@ -8,16 +8,26 @@
   (get (predicate-details pred) 0))
 (defn- pred-fn-field [pred]
   (get (predicate-details pred) 2))
-(defn- pred-requirement [pred]
-  (let [pred-meta (meta (eval pred))
-        pred-requirement (:spec-validate/requirement pred-meta)]
-    pred-requirement))
 
-(defn validator-for [spec]
+(defmulti pred-error
+  (fn [pred]
+    (if (seq? pred)
+      (pred-fn-symbol pred)
+      pred)))
+(defmethod pred-error 'clojure.core/contains? [_]
+  :missing)
+(defmethod pred-error :default [_]
+  :invalid)
+
+(defmulti pred-requirement identity)
+(defmethod pred-requirement :default [_]
+  :must-be-valid)
+
+(defn validator [spec]
   (fn [validation-target]
     (spec/valid? spec validation-target)))
 
-(defn problem-calculator-for
+(defn problem-calculator
   ([spec & {:as options}]
    (let [{:keys [validation-subject
                  problem-transformer]

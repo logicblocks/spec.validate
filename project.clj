@@ -17,17 +17,20 @@
             [lein-bikeshed "0.5.2"]
             [jonase/eastwood "1.4.0"]]
 
-  :dependencies [[valip "0.2.0"]
-                 [clj-time "0.15.2"]
+  :dependencies [[clj-time "0.15.2"]
                  [clojurewerkz/money "1.11.0"]
+                 [com.ibm.icu/icu4j "72.1"]
+                 [com.googlecode.libphonenumber/libphonenumber "8.13.12"]
+                 [metosin/spec-tools "0.10.6"]
                  [org.bovinegenius/exploding-fish "0.3.6"]
-                 [com.googlecode.libphonenumber/libphonenumber "8.13.12"]]
+                 [valip "0.2.0"]]
 
   :profiles
   {:shared
    ^{:pom-scope :test}
    {:dependencies
     [[org.clojure/clojure "1.11.1"]
+     [org.clojure/test.check "1.1.1"]
 
      [eftest "0.6.0"]]}
 
