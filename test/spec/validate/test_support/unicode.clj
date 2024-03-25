@@ -1,6 +1,5 @@
 (ns spec.validate.test-support.unicode
   (:require
-    [clojure.string :as string]
     [spec.validate.unicode :as uni]))
 
 (def horizontal-tabulation-character
@@ -117,19 +116,3 @@
 
 (def number-characters
   (uni/unicode-characters number-pattern))
-
-(let [characters (uni/unicode-characters "[[:blk=ASCII:]-[:gc=Cc:]]")]
-  (string/join "\n"
-    (map #(string/join " " %)
-      (partition 20 20 (repeat " ") characters))))
-
-(range)
-
-(into #{}
-  (map #(vec [(.codepoint %) (.codepointEnd %)])
-    (.ranges (uni/unicode-set "[[:blk=ASCII:]-[:gc=Cc:]]"))))
-
-(= (into #{} (uni/unicode-characters "[[:blk=ASCII:]-[:gc=Cc:]]"))
-  (into #{} (map (comp str char) (range 32 127))))
-
-(into [] (uni/unicode-characters "[[:blk=ASCII:]-[:gc=Cc:]]"))

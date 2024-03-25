@@ -15,158 +15,479 @@
 (defn re-satisfies? [re s]
   (not (nil? (re-find re s))))
 
-(deftest string?
-  (testing "predicate"
-    (is (true? (sv-string/string? "stuff")))
-    (is (false? (sv-string/string? 35)))
-    (is (false? (sv-string/string? nil))))
+(defmacro true-case [title & {:keys [samples sample]}]
+  {:title      title
+   :samples    (if sample [sample] samples)
+   :satisfied? true})
+(defmacro false-case [title & {:keys [samples sample]}]
+  {:title      title
+   :samples    (if sample [sample] samples)
+   :satisfied? false})
 
-  (testing "requirement"
-    (is (= :must-be-a-string
-          (sv-core/pred-requirement
-            'spec.validate.string/string?)))
-    (is (= :must-be-a-string
-          (sv-core/pred-requirement
-            'clojure.core/string?))))
+(defn string-sample [sets & {:keys [shuffle?]}]
+  (let [chars
+        (mapcat
+          (fn [[chars rate]]
+            (cond
+              (= rate :once) [(rand-nth chars)]
+              (> rate 1) (take rate (repeatedly #(rand-nth chars)))
+              :else (random-sample rate chars)))
+          sets)
+        chars (if shuffle? (shuffle chars) chars)]
+    (string/join chars)))
 
-  (testing "generation"
+(deftest string?-as-predicate
+  (doseq
+    [case
+     [(true-case "a string" :sample "stuff")
+      (false-case "a non-string" :sample 35)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/string? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest string?-as-requirement
+  (is (= :must-be-a-string
+        (sv-core/pred-requirement
+          'spec.validate.string/string?)))
+  (is (= :must-be-a-string
+        (sv-core/pred-requirement
+          'clojure.core/string?))))
+
+(deftest string?-as-generator
+  (is (every? true?
+        (map #(re-satisfies? #"^\w*$" %)
+          (gen/sample (spec/gen sv-string/string?))))))
+
+(deftest blank?-as-predicate
+  (doseq
+    [case
+     [(true-case "any whitespace character"
+        :samples sv-unicode/whitespace-characters)
+      (true-case "a sequence of whitespace characters"
+        :sample (string-sample [[sv-unicode/whitespace-characters 0.3]]))
+      (true-case "an empty string" :sample "")
+      (false-case "non-whitespace characters"
+        :samples sv-unicode/non-whitespace-characters)
+      (false-case "sequence of non-whitespace characters"
+        :sample (string-sample
+                  [[sv-unicode/non-whitespace-characters 0.00001]]))
+      (false-case (str "a sequence containing both whitespace and "
+                    "non-whitespace characters")
+        :sample (string-sample
+                  [[sv-unicode/whitespace-characters 0.3]
+                   [sv-unicode/non-whitespace-characters 0.00001]]
+                  {:shuffle? true}))
+      (false-case "a non string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/blank? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest blank?-as-requirement
+  (is (= :must-be-a-blank-string
+        (sv-core/pred-requirement
+          'spec.validate.string/blank?))))
+
+(deftest blank?-as-generator
+  (testing "generates some empty strings"
+    (let [samples (gen/sample (spec/gen sv-string/blank?) 100)]
+      (is (not (empty?
+                 (filter
+                   (fn [sample] (= 0 (count sample)))
+                   samples))))))
+
+  (testing "generates only whitespace strings"
+    (let [samples (gen/sample (spec/gen sv-string/blank?) 100)]
+      (is (every? true?
+            (map
+              (fn [sample]
+                (every?
+                  sv-test-string/whitespace?
+                  (sv-unicode/unicode-codepoint-seq sample)))
+              samples))))))
+
+(deftest not-blank?-as-predicate
+  (doseq
+    [case
+     [(false-case "any whitespace character"
+        :samples sv-unicode/whitespace-characters)
+      (false-case "a sequence of whitespace characters"
+        :sample (string-sample [[sv-unicode/whitespace-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (true-case "any non-whitespace character"
+        :samples sv-unicode/non-whitespace-characters)
+      (true-case "a sequence of non-whitespace characters"
+        :sample (string-sample [[sv-unicode/non-whitespace-characters 0.00001]]))
+      (true-case (str "a sequence containing both whitespace and "
+                   "non-whitespace characters")
+        :sample (string-sample
+                  [[sv-unicode/whitespace-characters 0.3]
+                   [sv-unicode/non-whitespace-characters 0.00001]]
+                  {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/not-blank? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest not-blank?-as-requirement
+  (is (= :must-be-a-non-blank-string
+        (sv-core/pred-requirement
+          'spec.validate.string/not-blank?))))
+
+(deftest not-blank?-as-generator
+  (testing "generates no empty strings"
+    (let [samples (gen/sample (spec/gen sv-string/not-blank?) 100)]
+      (is (empty?
+            (filter
+              (fn [sample] (= 0 (count sample)))
+              samples)))))
+
+  (testing "generates only non-whitespace strings"
+    (let [samples (gen/sample (spec/gen sv-string/not-blank?) 100)]
+      (is (every? true?
+            (map
+              (fn [sample]
+                (some
+                  sv-test-string/non-whitespace?
+                  (sv-unicode/unicode-codepoint-seq sample)))
+              samples))))))
+
+(deftest ascii-digits?-as-predicate
+  (doseq
+    [case
+     [(true-case "any ASCII digit character"
+        :samples sv-unicode/ascii-digit-characters)
+      (true-case "a sequence of ASCII digit characters"
+        :sample (string-sample
+                  [[sv-unicode/ascii-digit-characters :once]
+                   [sv-unicode/ascii-digit-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non ASCII digit character"
+        :samples sv-unicode/non-ascii-digit-characters)
+      (false-case "a sequence of non-ASCII digit characters"
+        :sample (string-sample
+                  [[sv-unicode/non-ascii-digit-characters 0.00001]]))
+      (false-case (str "a sequence containing both ASCII digit and non-ASCII "
+                    "digit characters")
+        :sample (string-sample
+                  [[sv-unicode/ascii-digit-characters 0.3]
+                   [sv-unicode/non-ascii-digit-characters 0.00001]]
+                  {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/ascii-digits? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest ascii-digits?-as-requirement
+  (is (= :must-be-a-string-of-ascii-digits
+        (sv-core/pred-requirement
+          'spec.validate.string/ascii-digits?))))
+
+(deftest ascii-digits?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample (spec/gen sv-string/ascii-digits?) 100)))))
+
+  (testing "generates only ASCII digit strings"
     (is (every? true?
-          (map #(re-satisfies? #"^\w*$" %)
-            (gen/sample (spec/gen sv-string/string?)))))))
+          (map #(re-satisfies? #"^\d+$" %)
+            (gen/sample (spec/gen sv-string/ascii-digits?) 100))))))
 
-(deftest blank?
-  (testing "predicate"
-    (testing "for any whitespace character"
+(deftest lowercase-ascii-alphabetics?-as-predicate
+  (doseq
+    [case
+     [(true-case "any lowercase ASCII alphabetic character"
+        :samples sv-unicode/lowercase-ascii-alphabetic-characters)
+      (true-case "a sequence of lowercase ASCII alphabetic characters"
+        :sample (string-sample
+                  [[sv-unicode/lowercase-ascii-alphabetic-characters :once]
+                   [sv-unicode/lowercase-ascii-alphabetic-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non non lowercase ASCII alphabetic character"
+        :samples sv-unicode/non-lowercase-ascii-alphabetic-characters)
+      (false-case "a sequence of non lowercase ASCII alphabetic characters"
+        :sample
+        (string-sample
+          [[sv-unicode/non-lowercase-ascii-alphabetic-characters 0.00001]]))
+      (false-case (str "a sequence containing both lowercase ASCII alphabetic "
+                    "characters and non lowercase ASCII alphabetic characters")
+        :sample
+        (string-sample
+          [[sv-unicode/lowercase-ascii-alphabetic-characters 0.3]
+           [sv-unicode/non-lowercase-ascii-alphabetic-characters 0.00001]]
+          {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
       (is (every?
-            #(sv-string/blank? %)
-            sv-unicode/whitespace-characters)))
+            #(= (sv-string/lowercase-ascii-alphabetics? %) (:satisfied? case))
+            (:samples case))))))
 
-    (testing "for a sequence of whitespace characters"
-      (let [whitespace-string
-            (string/join
-              (random-sample 0.3 sv-unicode/whitespace-characters))]
-        (is (true? (sv-string/blank? whitespace-string)))))
+(deftest lowercase-ascii-alphabetics?-as-requirement
+  (is (= :must-be-a-string-of-lowercase-ascii-alphabetic-characters
+        (sv-core/pred-requirement
+          'spec.validate.string/lowercase-ascii-alphabetics?))))
 
-    (testing "for an empty string"
-      (is (true? (sv-string/blank? ""))))
+(deftest lowercase-ascii-alphabetics?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample (spec/gen sv-string/lowercase-ascii-alphabetics?) 100)))))
 
-    (testing "for non-whitespace characters"
-      (is (not-any?
-            #(sv-string/blank? %)
-            sv-unicode/non-whitespace-characters)))
+  (testing "generates only lowercase ASCII alphabetic strings"
+    (is (every? true?
+          (map #(re-satisfies? #"^[a-z]+$" %)
+            (gen/sample (spec/gen sv-string/lowercase-ascii-alphabetics?) 100))))))
 
-    (testing "for a sequence of non-whitespace characters"
-      (let [non-whitespace-string
-            (string/join
-              (random-sample 0.00001 sv-unicode/non-whitespace-characters))]
-        (is (false? (sv-string/blank? non-whitespace-string)))))
-
-    (testing
-      "for a sequence containing both whitespace and non-whitespace characters"
-      (let [mixed-string
-            (string/join
-              (shuffle
-                (concat
-                  (random-sample 0.3
-                    sv-unicode/whitespace-characters)
-                  (random-sample 0.00001
-                    sv-unicode/non-whitespace-characters))))]
-        (is (false? (sv-string/blank? mixed-string)))))
-
-    (testing "for a non-string"
-      (is (false? (sv-string/blank? 10))))
-
-    (testing "for nil"
-      (is (false? (sv-string/blank? nil)))))
-
-  (testing "requirement"
-    (is (= :must-be-a-blank-string
-          (sv-core/pred-requirement
-            'spec.validate.string/blank?))))
-
-  (testing "generation"
-    (testing "generates some empty strings"
-      (let [samples (gen/sample (spec/gen sv-string/blank?) 100)]
-        (clojure.pprint/pprint samples)
-        (is (not (empty?
-                   (filter
-                     (fn [sample] (= 0 (count sample)))
-                     samples))))))
-
-    (testing "generates only whitespace strings"
-      (let [samples (gen/sample (spec/gen sv-string/blank?) 100)]
-        (is (every? true?
-              (map
-                (fn [sample]
-                  (every?
-                    sv-test-string/whitespace?
-                    (sv-unicode/unicode-codepoint-seq sample)))
-                samples)))))))
-
-(deftest not-blank?
-  (testing "predicate"
-    (testing "for any whitespace character"
-      (is (not-any?
-            #(sv-string/not-blank? %)
-            sv-unicode/whitespace-characters)))
-
-    (testing "for a sequence of whitespace characters"
-      (let [whitespace-string
-            (string/join
-              (random-sample 0.3 sv-unicode/whitespace-characters))]
-        (is (false? (sv-string/not-blank? whitespace-string)))))
-
-    (testing "for an empty string"
-      (is (false? (sv-string/not-blank? ""))))
-
-    (testing "for any non-whitespace character"
+(deftest uppercase-ascii-alphabetics?-as-predicate
+  (doseq
+    [case
+     [(true-case "any uppercase ASCII alphabetic character"
+        :samples sv-unicode/uppercase-ascii-alphabetic-characters)
+      (true-case "a sequence of uppercase ASCII alphabetic characters"
+        :sample (string-sample
+                  [[sv-unicode/uppercase-ascii-alphabetic-characters :once]
+                   [sv-unicode/uppercase-ascii-alphabetic-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non non uppercase ASCII alphabetic character"
+        :samples sv-unicode/non-uppercase-ascii-alphabetic-characters)
+      (false-case "a sequence of non uppercase ASCII alphabetic characters"
+        :sample
+        (string-sample
+          [[sv-unicode/non-uppercase-ascii-alphabetic-characters 0.00001]]))
+      (false-case (str "a sequence containing both uppercase ASCII alphabetic "
+                    "characters and non uppercase ASCII alphabetic characters")
+        :sample
+        (string-sample
+          [[sv-unicode/uppercase-ascii-alphabetic-characters 0.3]
+           [sv-unicode/non-uppercase-ascii-alphabetic-characters 0.00001]]
+          {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
       (is (every?
-            #(sv-string/not-blank? %)
-            sv-unicode/non-whitespace-characters)))
+            #(= (sv-string/uppercase-ascii-alphabetics? %) (:satisfied? case))
+            (:samples case))))))
 
-    (testing "for a sequence of non-whitespace characters"
-      (let [non-whitespace-string
-            (string/join
-              (random-sample 0.00001 sv-unicode/non-whitespace-characters))]
-        (is (true? (sv-string/not-blank? non-whitespace-string)))))
+(deftest uppercase-ascii-alphabetics?-as-requirement
+  (is (= :must-be-a-string-of-uppercase-ascii-alphabetic-characters
+        (sv-core/pred-requirement
+          'spec.validate.string/uppercase-ascii-alphabetics?))))
 
-    (testing
-      "for a sequence containing both whitespace and non-whitespace characters"
-      (let [mixed-string
-            (string/join
-              (shuffle
-                (concat
-                  (random-sample 0.3
-                    sv-unicode/whitespace-characters)
-                  (random-sample 0.00001
-                    sv-unicode/non-whitespace-characters))))]
-        (is (true? (sv-string/not-blank? mixed-string)))))
+(deftest uppercase-ascii-alphabetics?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample (spec/gen sv-string/uppercase-ascii-alphabetics?) 100)))))
 
-    (testing "for a non-string"
-      (is (false? (sv-string/not-blank? 10))))
+  (testing "generates only uppercase ASCII alphabetic strings"
+    (is (every? true?
+          (map #(re-satisfies? #"^[A-Z]+$" %)
+            (gen/sample (spec/gen sv-string/uppercase-ascii-alphabetics?) 100))))))
 
-    (testing "for nil"
-      (is (false? (sv-string/not-blank? nil)))))
+(deftest ascii-alphabetics?-as-predicate
+  (doseq
+    [case
+     [(true-case "any ASCII alphabetic character"
+        :samples sv-unicode/ascii-alphabetic-characters)
+      (true-case "a sequence of ASCII alphabetic characters"
+        :sample (string-sample
+                  [[sv-unicode/ascii-alphabetic-characters :once]
+                   [sv-unicode/ascii-alphabetic-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non ASCII alphabetic character"
+        :samples sv-unicode/non-ascii-alphabetic-characters)
+      (false-case "a sequence of non ASCII alphabetic characters"
+        :sample (string-sample
+                  [[sv-unicode/non-ascii-alphabetic-characters 0.00001]]))
+      (false-case (str "a sequence containing both ASCII alphabetic characters "
+                    "and non ASCII alphabetic characters")
+        :sample
+        (string-sample
+          [[sv-unicode/ascii-alphabetic-characters 0.3]
+           [sv-unicode/non-ascii-alphabetic-characters 0.00001]]
+          {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/ascii-alphabetics? %) (:satisfied? case))
+            (:samples case))))))
 
-  (testing "requirement"
-    (is (= :must-be-a-non-blank-string
-          (sv-core/pred-requirement
-            'spec.validate.string/not-blank?))))
+(deftest ascii-alphabetics?-as-requirement
+  (is (= :must-be-a-string-of-ascii-alphabetic-characters
+        (sv-core/pred-requirement
+          'spec.validate.string/ascii-alphabetics?))))
 
-  (testing "generation"
-    (testing "generates no empty strings"
-      (let [samples (gen/sample (spec/gen sv-string/not-blank?) 100)]
-        (is (empty?
-              (filter
-                (fn [sample] (= 0 (count sample)))
-                samples)))))
+(deftest ascii-alphabetics?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample (spec/gen sv-string/ascii-alphabetics?) 100)))))
 
-    (testing "generates only non-whitespace strings"
-      (let [samples (gen/sample (spec/gen sv-string/not-blank?) 100)]
-        (is (every? true?
-              (map
-                (fn [sample]
-                  (some
-                    sv-test-string/non-whitespace?
-                    (sv-unicode/unicode-codepoint-seq sample)))
-                samples)))))))
+  (testing "generates only ASCII alphabetic strings"
+    (is (every? true?
+          (map #(re-satisfies? #"^[a-zA-Z]+$" %)
+            (gen/sample (spec/gen sv-string/ascii-alphabetics?) 100))))))
+
+(deftest lowercase-ascii-alphanumerics?-as-predicate
+  (doseq
+    [case
+     [(true-case "any lowercase ASCII alphanumeric character"
+        :samples sv-unicode/lowercase-ascii-alphanumeric-characters)
+      (true-case "a sequence of lowercase ASCII alphanumeric characters"
+        :sample (string-sample
+                  [[sv-unicode/lowercase-ascii-alphanumeric-characters :once]
+                   [sv-unicode/lowercase-ascii-alphanumeric-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non lowercase ASCII alphanumeric character"
+        :samples sv-unicode/non-lowercase-ascii-alphanumeric-characters)
+      (false-case "a sequence of non lowercse ASCII alphanumeric characters"
+        :sample
+        (string-sample
+          [[sv-unicode/non-lowercase-ascii-alphanumeric-characters 0.00001]]))
+      (false-case (str "a sequence containing both lowercase ASCII "
+                    "alphanumeric characters and non ASCII alphanumeric "
+                    "characters")
+        :sample
+        (string-sample
+          [[sv-unicode/lowercase-ascii-alphanumeric-characters 0.3]
+           [sv-unicode/non-lowercase-ascii-alphanumeric-characters 0.00001]]
+          {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/lowercase-ascii-alphanumerics? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest lowercase-ascii-alphanumerics?-as-requirement
+  (is (= :must-be-a-string-of-lowercase-ascii-alphanumeric-characters
+        (sv-core/pred-requirement
+          'spec.validate.string/lowercase-ascii-alphanumerics?))))
+
+(deftest lowercase-ascii-alphanumerics?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample
+              (spec/gen sv-string/lowercase-ascii-alphanumerics?) 100)))))
+
+  (testing "generates only lowercase ASCII alphanumeric strings"
+    (is (every? true?
+          (map #(re-satisfies? #"^[a-z0-9]+$" %)
+            (gen/sample
+              (spec/gen sv-string/lowercase-ascii-alphanumerics?) 100))))))
+
+(deftest uppercase-ascii-alphanumerics?-as-predicate
+  (doseq
+    [case
+     [(true-case "any uppercase ASCII alphanumeric character"
+        :samples sv-unicode/uppercase-ascii-alphanumeric-characters)
+      (true-case "a sequence of uppercase ASCII alphanumeric characters"
+        :sample (string-sample
+                  [[sv-unicode/uppercase-ascii-alphanumeric-characters :once]
+                   [sv-unicode/uppercase-ascii-alphanumeric-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non uppercase ASCII alphanumeric character"
+        :samples sv-unicode/non-uppercase-ascii-alphanumeric-characters)
+      (false-case "a sequence of non lowercse ASCII alphanumeric characters"
+        :sample
+        (string-sample
+          [[sv-unicode/non-uppercase-ascii-alphanumeric-characters 0.00001]]))
+      (false-case (str "a sequence containing both uppercase ASCII "
+                    "alphanumeric characters and non ASCII alphanumeric "
+                    "characters")
+        :sample
+        (string-sample
+          [[sv-unicode/uppercase-ascii-alphanumeric-characters 0.3]
+           [sv-unicode/non-uppercase-ascii-alphanumeric-characters 0.00001]]
+          {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/uppercase-ascii-alphanumerics? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest uppercase-ascii-alphanumerics?-as-requirement
+  (is (= :must-be-a-string-of-uppercase-ascii-alphanumeric-characters
+        (sv-core/pred-requirement
+          'spec.validate.string/uppercase-ascii-alphanumerics?))))
+
+(deftest uppercase-ascii-alphanumerics?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample
+              (spec/gen sv-string/uppercase-ascii-alphanumerics?) 100)))))
+
+  (testing "generates only uppercase ASCII alphanumeric strings"
+    (is (every? true?
+          (map #(re-satisfies? #"^[A-Z0-9]+$" %)
+            (gen/sample
+              (spec/gen sv-string/uppercase-ascii-alphanumerics?) 100))))))
+
+(deftest ascii-alphanumerics?-as-predicate
+  (doseq
+    [case
+     [(true-case "any ASCII alphanumeric character"
+        :samples sv-unicode/ascii-alphanumeric-characters)
+      (true-case "a sequence of uppercase ASCII alphanumeric characters"
+        :sample (string-sample
+                  [[sv-unicode/ascii-alphanumeric-characters :once]
+                   [sv-unicode/ascii-alphanumeric-characters 0.3]]))
+      (false-case "an empty string" :sample "")
+      (false-case "any non uppercase ASCII alphanumeric character"
+        :samples sv-unicode/non-ascii-alphanumeric-characters)
+      (false-case "a sequence of non lowercse ASCII alphanumeric characters"
+        :sample
+        (string-sample
+          [[sv-unicode/non-ascii-alphanumeric-characters 0.00001]]))
+      (false-case (str "a sequence containing both uppercase ASCII "
+                    "alphanumeric characters and non ASCII alphanumeric "
+                    "characters")
+        :sample
+        (string-sample
+          [[sv-unicode/ascii-alphanumeric-characters 0.3]
+           [sv-unicode/non-ascii-alphanumeric-characters 0.00001]]
+          {:shuffle? true}))
+      (false-case "a non-string" :sample 10)
+      (false-case "nil" :sample nil)]]
+    (testing (str "for " (:title case))
+      (is (every?
+            #(= (sv-string/ascii-alphanumerics? %) (:satisfied? case))
+            (:samples case))))))
+
+(deftest ascii-alphanumerics?-as-requirement
+  (is (= :must-be-a-string-of-ascii-alphanumeric-characters
+        (sv-core/pred-requirement
+          'spec.validate.string/ascii-alphanumerics?))))
+
+(deftest ascii-alphanumerics?-as-generator
+  (testing "generates no empty strings"
+    (is (empty?
+          (filter
+            (fn [sample] (= 0 (count sample)))
+            (gen/sample
+              (spec/gen sv-string/ascii-alphanumerics?) 100)))))
+
+  (testing "generates only ASCII alphabetic strings"
+    (is (every? true?
+          (map #(re-satisfies? #"^[a-zA-Z0-9]+$" %)
+            (gen/sample
+              (spec/gen sv-string/ascii-alphanumerics?) 100))))))

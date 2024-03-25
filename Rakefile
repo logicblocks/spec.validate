@@ -18,7 +18,7 @@ task default: %i[
 ]
 
 RakeLeiningen.define_installation_tasks(
-  version: '2.10.0'
+  version: '2.11.2'
 )
 
 RakeGitCrypt.define_standard_tasks(

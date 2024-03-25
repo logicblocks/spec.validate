@@ -5,7 +5,8 @@
   :license {:name "The MIT License"
             :url  "https://opensource.org/licenses/MIT"}
 
-  :plugins [[lein-cloverage "1.2.4"]
+  :plugins [[fipp "0.6.26"]
+            [lein-cloverage "1.2.4"]
             [lein-shell "0.5.0"]
             [lein-ancient "0.7.0"]
             [lein-changelog "0.3.2"]
@@ -32,14 +33,31 @@
     [[org.clojure/clojure "1.11.1"]
      [org.clojure/test.check "1.1.1"]
 
+     [vlaaad/reveal "1.3.282"]
+
+     [nrepl "1.1.1"]
+
      [eftest "0.6.0"]]}
 
+   :dev-specific
+   {:source-paths ["dev"]
+    :eftest       {:multithread? false}}
+
+   :reveal-specific
+   {:repl-options {:nrepl-middleware [vlaaad.reveal.nrepl/middleware]}
+    :jvm-opts     ["-Dvlaaad.reveal.prefs={:theme :dark}"]}
+
+   :test-specific
+   {:eftest {:multithread? false}}
+
    :dev
-   [:shared {:source-paths ["dev"]
-             :eftest       {:multithread? false}}]
+   [:shared :dev-specific]
+
+   :reveal
+   [:shared :reveal-specific]
 
    :test
-   [:shared {:eftest {:multithread? false}}]
+   [:shared :test-specific]
 
    :prerelease
    {:release-tasks
