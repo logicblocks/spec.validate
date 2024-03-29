@@ -1,8 +1,8 @@
 (ns spec.validate.currency-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.currency :as sv-currency]))
+   [spec.validate.currency :as sv-currency]))
 
 (deftest for-currency-amount?
   (testing "returns true when provided string represents a currency amount"
@@ -10,7 +10,7 @@
       (is (true? (sv-currency/currency-amount? target)))))
 
   (testing
-    "returns false when provided string does not represent a currency amount"
+   "returns false when provided string does not represent a currency amount"
     (let [target "the quick brown fox"]
       (is (false? (sv-currency/currency-amount? target)))))
 
@@ -28,7 +28,7 @@
       (is (true? (sv-currency/currency-code? target)))))
 
   (testing
-    "returns false when provided string does not represent a currency code"
+   "returns false when provided string does not represent a currency code"
     (let [target "the quick brown fox"]
       (is (false? (sv-currency/currency-code? target)))))
 

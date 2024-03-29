@@ -1,10 +1,10 @@
 (ns spec.validate.currency
   (:require
-    [clojurewerkz.money.amounts :as money-amounts]
-    [clojurewerkz.money.currencies :as money-currencies]
+   [clojurewerkz.money.amounts :as money-amounts]
+   [clojurewerkz.money.currencies :as money-currencies]
 
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils]))
 
 ;; currency
 (defn currency-amount?

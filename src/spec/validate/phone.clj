@@ -1,9 +1,9 @@
 (ns spec.validate.phone
   (:require
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils])
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils])
   (:import
-    [com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException]))
+   [com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException]))
 
 (def ^:dynamic *default-phone-number-region-code* "GB")
 

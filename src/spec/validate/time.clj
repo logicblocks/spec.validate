@@ -1,12 +1,11 @@
 (ns spec.validate.time
   (:require
-    [clj-time.format :as datetimes]
+   [clj-time.format :as datetimes]
 
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils])
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils])
   (:import
-    [com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException]
-    [org.apache.commons.validator.routines DoubleValidator]))
+   [com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException]))
 
 (defn iso8601-datetime?
   "Returns true if the provided value is a string representing an ISO8601

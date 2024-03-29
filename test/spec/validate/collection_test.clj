@@ -1,8 +1,8 @@
 (ns spec.validate.collection-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.collection :as sv-collection]))
+   [spec.validate.collection :as sv-collection]))
 
 (deftest for-not-empty?
   (testing "returns true when provided collection has many items"
@@ -50,7 +50,7 @@
 (deftest for-length-less-than?
   (testing "returns a validator that"
     (testing
-      "returns true when the provided string has length less than specified"
+     "returns true when the provided string has length less than specified"
       (let [target "abcdef"
             length-less-than-10? (sv-collection/length-less-than? 10)]
         (is (true? (length-less-than-10? target)))))
@@ -61,7 +61,7 @@
         (is (false? (length-less-than-10? target)))))
 
     (testing
-      "returns false when the provided string length greater than specified"
+     "returns false when the provided string length greater than specified"
       (let [target "abcdefghijkl"
             length-less-than-10? (sv-collection/length-less-than? 10)]
         (is (false? (length-less-than-10? target)))))
@@ -79,7 +79,7 @@
 (deftest for-length-greater-than?
   (testing "returns a validator that"
     (testing
-      "returns true when the provided string has length greater than specified"
+     "returns true when the provided string has length greater than specified"
       (let [target "abcdefghijk"
             length-greater-than-10? (sv-collection/length-greater-than? 10)]
         (is (true? (length-greater-than-10? target)))))
@@ -90,7 +90,7 @@
         (is (false? (length-greater-than-10? target)))))
 
     (testing
-      "returns false when the provided string length less than specified"
+     "returns false when the provided string length less than specified"
       (let [target "abcdef"
             length-greater-than-10? (sv-collection/length-greater-than? 10)]
         (is (false? (length-greater-than-10? target)))))

@@ -1,7 +1,7 @@
 (ns spec.validate.collection
   (:require
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils]))
 
 (defn not-empty?
   "Returns true if the provided value has a count of at least 1,

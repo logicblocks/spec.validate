@@ -1,7 +1,7 @@
 (ns spec.validate.address
   (:require
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils]))
 
 (def ^:private postcode-regex
   (re-pattern

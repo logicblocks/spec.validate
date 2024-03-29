@@ -1,9 +1,9 @@
 (ns spec.validate.url
   (:require
-    [org.bovinegenius.exploding-fish :as urls]
+   [org.bovinegenius.exploding-fish :as urls]
 
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils]))
 
 ;; URLs
 (defn absolute-url?

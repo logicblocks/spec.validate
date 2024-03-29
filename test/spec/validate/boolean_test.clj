@@ -1,8 +1,8 @@
 (ns spec.validate.boolean-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.boolean :as sv-boolean]))
+   [spec.validate.boolean :as sv-boolean]))
 
 (deftest for-boolean?
   (testing "returns true when provided value is a string"

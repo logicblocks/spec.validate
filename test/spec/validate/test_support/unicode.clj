@@ -1,6 +1,6 @@
 (ns spec.validate.test-support.unicode
   (:require
-    [spec.validate.unicode :as uni]))
+   [spec.validate.unicode :as uni]))
 
 (def horizontal-tabulation-character
   "\u005Ct")

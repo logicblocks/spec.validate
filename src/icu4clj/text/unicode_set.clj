@@ -1,6 +1,8 @@
 (ns icu4clj.text.unicode-set
   (:refer-clojure :exclude [complement])
-  (:import [com.ibm.icu.text UnicodeSet]))
+  (:import
+   [com.ibm.icu.text UnicodeSet
+    UnicodeSet$EntryRange]))
 
 (defn ^UnicodeSet unicode-set [^String pattern]
   (doto (UnicodeSet. pattern)
@@ -10,9 +12,9 @@
   (.complement unicode-set))
 
 (defn codepoint-ranges [^UnicodeSet unicode-set]
-  (into []
-    (mapv #(vec [(.codepoint %) (.codepointEnd %)])
-      (.ranges unicode-set))))
+  (vec (mapv (fn [^UnicodeSet$EntryRange range]
+               (vec [(.codepoint range) (.codepointEnd range)]))
+         (.ranges unicode-set))))
 
 (defn character-vector [^UnicodeSet unicode-set]
   (vec unicode-set))

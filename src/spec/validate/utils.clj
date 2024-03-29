@@ -1,14 +1,17 @@
 (ns spec.validate.utils
   (:require
-    [clojure.spec.alpha :as spec]
+   [clojure.spec.alpha :as spec]
 
-    [spec.validate.core :as sv-core]))
+   [spec.validate.core :as sv-core]))
 
 (defmacro exception->false [form]
   `(try ~form (catch Exception _# false)))
 
-(defn- nil->false [value]
+(defn nil->false [value]
   (if (nil? value) false value))
+
+(defn re-satisfies? [re s]
+  (not (nil? (re-find re s))))
 
 (defn extend-pred-with-gen
   [pred gen]
@@ -23,3 +26,16 @@
   [sym requirement]
   (defmethod sv-core/pred-requirement
     sym [_] requirement))
+
+(defmacro def-validate-pred
+  [sym doc-string params options & body]
+  `(do
+     (defn ~sym ~doc-string ~params
+       ~@body)
+
+     (extend-pred-with-requirement
+       (symbol (str (ns-name *ns*)) ~(name sym))
+       ~(:requirement options))
+
+     (extend-pred-with-gen ~sym
+       ~(:gen options))))

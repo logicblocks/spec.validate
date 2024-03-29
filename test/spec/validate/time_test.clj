@@ -1,8 +1,8 @@
 (ns spec.validate.time-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.time :as sv-time]))
+   [spec.validate.time :as sv-time]))
 
 (deftest for-iso8601-datetime?
   (testing "returns true when provided string is an ISO8601 datetime"

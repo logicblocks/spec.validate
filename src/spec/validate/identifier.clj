@@ -1,7 +1,7 @@
 (ns spec.validate.identifier
   (:require
-    [spec.validate.core :as sv-core]
-    [spec.validate.utils :as sv-utils]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.utils :as sv-utils]))
 
 ;; identifiers
 (def ^:private uuid-v4-regex

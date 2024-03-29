@@ -1,8 +1,8 @@
 (ns spec.validate.identifier-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.identifier :as sv-identifier]))
+   [spec.validate.identifier :as sv-identifier]))
 
 (deftest for-uuid-v4?
   (testing "returns true when provided string represents a lower case v4 UUID"

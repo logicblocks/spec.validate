@@ -1,8 +1,8 @@
 (ns spec.validate.address-test
   (:require
-    [clojure.test :refer [deftest testing is]]
+   [clojure.test :refer [deftest testing is]]
 
-    [spec.validate.address :as sv-address]))
+   [spec.validate.address :as sv-address]))
 
 (deftest for-postcode?
   (testing "returns true when provided string represents a UK postcode"

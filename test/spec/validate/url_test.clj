@@ -1,8 +1,8 @@
 (ns spec.validate.url-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.url :as sv-url]))
+   [spec.validate.url :as sv-url]))
 
 (deftest for-absolute-url?
   (testing "returns true when provided string represents an absolute URL"

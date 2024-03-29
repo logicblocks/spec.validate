@@ -1,8 +1,8 @@
 (ns spec.validate.email-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.email :as sv-email]))
+   [spec.validate.email :as sv-email]))
 
 (deftest for-email-address?
   (testing "returns true when provided string is a valid email address"
@@ -10,7 +10,7 @@
       (is (true? (sv-email/email-address? target)))))
 
   (testing
-    "returns false when provided string does not represent an email address"
+   "returns false when provided string does not represent an email address"
     (let [target "the quick brown fox"]
       (is (false? (sv-email/email-address? target)))))
 

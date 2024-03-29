@@ -1,6 +1,6 @@
 (ns spec.validate.unicode
   (:require
-    [icu4clj.text.unicode-set :as icu-us]))
+   [icu4clj.text.unicode-set :as icu-us]))
 
 (defn unicode-characters [^String pattern]
   (icu-us/character-vector (icu-us/unicode-set pattern)))
@@ -13,7 +13,6 @@
 
 (defn complement-pattern [pattern]
   (str "[^" pattern "]"))
-
 
 (def horizontal-tabulation-character
   "\u005Ct")

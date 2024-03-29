@@ -1,8 +1,8 @@
 (ns spec.validate.phone-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.phone :as sv-phone]))
+   [spec.validate.phone :as sv-phone]))
 
 (deftest for-phone-number?
   (testing "returns true when provided string represents a phone number"
@@ -10,7 +10,7 @@
       (is (true? (sv-phone/phone-number? target)))))
 
   (testing
-    "returns false when provided string does not represent a phone number"
+   "returns false when provided string does not represent a phone number"
     (let [target "the quick brown fox"]
       (is (false? (sv-phone/phone-number? target)))))
 
