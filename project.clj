@@ -18,12 +18,11 @@
             [lein-bikeshed "0.5.2"]
             [jonase/eastwood "1.4.0"]]
 
-  :dependencies [[clj-time "0.15.2"]                        ;; yes
-                 [clojurewerkz/money "1.11.0"]              ;; yes
-                 [com.ibm.icu/icu4j "72.1"]                 ;; yes
-                 [com.googlecode.libphonenumber/libphonenumber "8.13.12"] ;; yes
-                 [metosin/spec-tools "0.10.6"]
-                 [org.bovinegenius/exploding-fish "0.3.6"]]
+  :dependencies [[clj-time "0.15.2"]
+                 [clojurewerkz/money "1.11.0"]
+                 [com.ibm.icu/icu4j "72.1"]
+                 [com.googlecode.libphonenumber/libphonenumber "8.13.12"]
+                 [lambdaisland/uri "1.19.155"]]
 
   :profiles
   {:shared
