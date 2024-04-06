@@ -2,7 +2,8 @@
   (:require
    [clojure.spec.alpha :as spec]
 
-   [spec.validate.core :as sv-core]))
+   [spec.validate.core :as sv-core])
+  (:import [java.util.regex Pattern]))
 
 (defmacro exception->false [form]
   `(try ~form (catch Exception _# false)))
@@ -12,6 +13,9 @@
 
 (defn re-satisfies? [re s]
   (not (nil? (re-find re s))))
+
+(defn re-quote [value]
+  (Pattern/quote (str value)))
 
 (defn extend-pred-with-gen
   [pred gen]

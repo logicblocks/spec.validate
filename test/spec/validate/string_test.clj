@@ -11,7 +11,6 @@
    [spec.validate.unicode :as sv-unicode]
    [spec.validate.utils :as sv-utils]
 
-   [spec.validate.test-support.string :as sv-test-string]
    [spec.validate.test-support.cases :as sv-cases]))
 
 (defn string-sample [char-choices & {:keys [shuffle?]}]
@@ -95,7 +94,7 @@
             (map
               (fn [sample]
                 (every?
-                  sv-test-string/whitespace?
+                  sv-unicode/whitespace-character?
                   (sv-unicode/unicode-codepoint-seq sample)))
               samples))))))
 
@@ -144,7 +143,7 @@
             (map
               (fn [sample]
                 (some
-                  sv-test-string/non-whitespace?
+                  sv-unicode/non-whitespace-character?
                   (sv-unicode/unicode-codepoint-seq sample)))
               samples))))))
 

@@ -190,3 +190,22 @@
 
 (def non-ascii-alphanumeric-characters
   (unicode-characters non-ascii-alphanumeric-pattern))
+
+(defn whitespace-character? [value]
+  (cond
+    (char? value) (Character/isWhitespace ^char value)
+    (integer? value) (Character/isWhitespace (long value))
+    (and (string? value) (= (.count (.codePoints ^String value)) 1))
+    (Character/isWhitespace (long (.codePointAt ^String value 0)))
+    :else false))
+
+(defn non-whitespace-character? [value]
+  (not (whitespace-character? value)))
+
+(defn space-separator-character? [value]
+  (contains?
+    (set (unicode-characters space-separator-pattern))
+    (cond
+      (char? value) (Character/toString ^char value)
+      (integer? value) (Character/toString (long value))
+      :else (str value))))
