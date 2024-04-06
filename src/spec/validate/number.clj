@@ -1,5 +1,5 @@
 (ns spec.validate.number
-  (:refer-clojure :exclude [zero? integer? zero?])
+  (:refer-clojure :exclude [zero? integer?])
   (:require
    [clojure.spec.gen.alpha :as gen]
    [clojure.string :as string]
@@ -25,12 +25,12 @@
 
   ; number-string?
 
-  ; positive?
+  positive?
   ; positive-integer-string?
   ; positive-decimal-string?
   ; positive-number-string?
 
-  ; negative?
+  negative?
   ; negative-integer-string?
   ; negative-decimal-string?
   ; negative-number-string?
@@ -38,7 +38,7 @@
   ; natural-number?
   ; natural-number-string?
 
-  ; zero?
+  zero?
   ; zero-string?
   )
 
@@ -69,34 +69,37 @@
   [_]
   :must-be-an-integer)
 
+(defn gen-integer-string []
+  (gen/fmap str
+    (gen/gen-for-pred clojure.core/integer?)))
+
+(defn integer-string-pattern []
+  (let [{:keys [digits zero-digit]} (icu-tnf/decimal-format-symbols)
+
+        zero-pattern
+        (str zero-digit)
+        integer-pattern
+        (str
+          "[" (string/join (non-zero-digits)) "]"
+          "([" (string/join digits) "]|" (grouping-separator-pattern) ")*")]
+    (re-pattern
+      (str
+        "^"
+        (sign-pattern) "(" zero-pattern "|" integer-pattern ")"
+        "$"))))
+
 (sv-utils/def-validate-pred integer-string?
   "Returns true if the provided value is a string representing a base 10
   integer, else returns false."
   [value]
   {:requirement :must-be-an-integer-string
-   :gen         #(gen/fmap str
-                   (gen/gen-for-pred clojure.core/integer?))}
+   :gen         gen-integer-string}
   (cond
     (nil? value) false
     (not (string? value)) false
     :else
     (sv-utils/exception->false
-      (let [{:keys [digits zero-digit]} (icu-tnf/decimal-format-symbols)
-
-            zero-pattern
-            (str zero-digit)
-            integer-pattern
-            (str
-              "[" (string/join (non-zero-digits)) "]"
-              "([" (string/join digits) "]|" (grouping-separator-pattern) ")*")
-
-            pattern
-            (re-pattern
-              (str
-                "^"
-                (sign-pattern) "(" zero-pattern "|" integer-pattern ")"
-                "$"))]
-        (sv-utils/re-satisfies? pattern value)))))
+      (sv-utils/re-satisfies? (integer-string-pattern) value))))
 
 (sv-utils/def-validate-pred floating-point-number?
   "Returns true if the provided value is a floating point number (Float or
@@ -189,35 +192,46 @@
     (sv-utils/exception->false
       (sv-utils/re-satisfies? (decimal-string-pattern) value))))
 
-(defn positive?
-  "Returns true if the provided value is a positive number or a string
-  representing a positive number, else returns false."
+(sv-utils/def-validate-pred positive?
+  "Returns true if the provided value is a positive number, else returns false."
   [value]
+  {:requirement :must-be-a-positive-number
+   :gen         #(gen/gen-for-pred pos-int?)}
   (sv-utils/exception->false
-    (clojure.core/pos? (parse-double value))))
+    (clojure.core/pos? value)))
 
-(defmethod sv-core/pred-requirement 'spec.validate.predicates/positive?
+(defmethod sv-core/pred-requirement 'clojure.core/pos?
   [_]
   :must-be-a-positive-number)
 
-(defn negative?
-  "Returns true if the provided value is a positive number or a string
-  representing a positive number, else returns false."
-  [value]
-  (sv-utils/exception->false
-    (clojure.core/neg? (parse-double value))))
+(defmethod sv-core/pred-requirement 'clojure.core/pos-int?
+  [_]
+  :must-be-a-positive-integer)
 
-(defmethod sv-core/pred-requirement 'spec.validate.predicates/negative?
+(sv-utils/def-validate-pred negative?
+  "Returns true if the provided value is a negative number, else returns false."
+  [value]
+  {:requirement :must-be-a-negative-number
+   :gen         #(gen/gen-for-pred neg-int?)}
+  (sv-utils/exception->false
+    (clojure.core/neg? value)))
+
+(defmethod sv-core/pred-requirement 'clojure.core/neg?
   [_]
   :must-be-a-negative-number)
 
-(defn zero?
-  "Returns true if the provided value is zero or a string representing zero,
-  else returns false."
-  [value]
-  (sv-utils/exception->false
-    (clojure.core/zero? (parse-double value))))
+(defmethod sv-core/pred-requirement 'clojure.core/neg-int?
+  [_]
+  :must-be-a-negative-integer)
 
-(defmethod sv-core/pred-requirement 'spec.validate.predicates/zero?
+(sv-utils/def-validate-pred zero?
+  "Returns true if the provided value is zero, else returns false."
+  [value]
+  {:requirement :must-be-zero
+   :gen         #(gen/gen-for-pred clojure.core/zero?)}
+  (sv-utils/exception->false
+    (clojure.core/zero? value)))
+
+(defmethod sv-core/pred-requirement 'clojure.core/zero?
   [_]
   :must-be-zero)

@@ -45,7 +45,9 @@
 (deftest integer?-as-requirement
   (is (= :must-be-an-integer
         (sv-core/pred-requirement
-          'spec.validate.number/integer?)))
+          'spec.validate.number/integer?))))
+
+(deftest clojure-core-integer?-as-requirement
   (is (= :must-be-an-integer
         (sv-core/pred-requirement
           'clojure.core/integer?))))
@@ -315,85 +317,261 @@
         (str "mismatching samples: "
           (filterv #(not (can-parse? %)) samples))))))
 
-(deftest for-positive?
-  (testing "returns true when provided string represents a positive number"
-    (let [target "54.22"]
-      (is (true? (sv-number/positive? target)))))
+(deftest positive?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any positive int"
+       :samples [(int 1) (int 35) (int 100000) Integer/MAX_VALUE])
+     (sv-cases/true-case "any positive long"
+       :samples [1 35 100000 Long/MAX_VALUE])
+     (sv-cases/true-case "any positive float"
+       :samples [(float 0.00000000000001)
+                 (float 1.23) (float 35.456) (float 100000)
+                 Float/MIN_VALUE
+                 Float/MAX_VALUE])
+     (sv-cases/true-case "any positive double"
+       :samples [0.000000000000000000001
+                 1.23 35.456 100000
+                 Double/MIN_VALUE
+                 Double/MAX_VALUE])
+     (sv-cases/true-case "any positive big int"
+       :samples [1N 35N 100000N
+                 (bigint "111111111111111999999999999991111111")])
+     (sv-cases/true-case "any positive big integer"
+       :samples [(biginteger 1) (biginteger 35) (biginteger 100000)
+                 (biginteger "111111111111111999999999999991111111")])
+     (sv-cases/true-case "any positive big decimal"
+       :samples [(bigdec 1.123) (bigdec 35.2) (bigdec 100000)
+                 (bigdec "111111111111111999999999999991111111.4567")])
+     (sv-cases/false-case "any zero value number"
+       :samples [(int 0) 0 (float 0) 0.0 0M 0N (biginteger 0)])
+     (sv-cases/false-case "any negative integer"
+       :samples [(int -1) (int -35) (int -100000) Integer/MIN_VALUE])
+     (sv-cases/false-case "any negative long"
+       :samples [-1 -35 -100000 Long/MIN_VALUE])
+     (sv-cases/false-case "any negative float"
+       :samples [(float -0.00000000000001)
+                 (float -1.23) (float -35.456) (float -100000)
+                 (- Float/MIN_VALUE)
+                 (- Float/MAX_VALUE)])
+     (sv-cases/false-case "any negative double"
+       :samples [-0.000000000000000000001
+                 -1.23 -35.456 -100000
+                 (- Double/MIN_VALUE)
+                 (- Double/MAX_VALUE)])
+     (sv-cases/false-case "any negative big int"
+       :samples [(biginteger -1) (biginteger -35) (biginteger -100000)
+                 (bigint "-111111111111111999999999999991111111")])
+     (sv-cases/false-case "any negative big integer"
+       :samples [-1N -35N -100000N
+                 (biginteger "-111111111111111999999999999991111111")])
+     (sv-cases/false-case "any negative big decimal"
+       :samples [(bigdec -1.123) (bigdec -35.2) (bigdec -100000)
+                 (bigdec "-111111111111111999999999999991111111.4567")])
+     (sv-cases/false-case "any number as a string"
+       :samples ["1" "-1" "100.2" "-100.45"])
+     (sv-cases/false-case "a non-number"
+       :samples [true false "not-an-integer"])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-number/positive?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-  #_(testing "returns true when provided value is a positive number"
-      (let [target 54.22]
-        (is (true? (sv-number/positive? target)))))
+(deftest positive?-as-requirement
+  (is (= :must-be-a-positive-number
+        (sv-core/pred-requirement
+          'spec.validate.number/positive?))))
 
-  (testing "returns false when provided string represents a zero"
-    (let [target "0.00"]
-      (is (false? (sv-number/positive? target)))))
+(deftest clojure-core-pos?-as-requirement
+  (is (= :must-be-a-positive-number
+        (sv-core/pred-requirement
+          'clojure.core/pos?))))
 
-  (testing "returns false when provided value is zero"
-    (let [target 0.00]
-      (is (false? (sv-number/positive? target)))))
+(deftest clojure-core-pos-int?-as-requirement
+  (is (= :must-be-a-positive-integer
+        (sv-core/pred-requirement
+          'clojure.core/pos-int?))))
 
-  (testing "returns false when provided string represents a negative number"
-    (let [target "-52.30"]
-      (is (false? (sv-number/positive? target)))))
+(deftest positive?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample (spec/gen sv-number/positive?) 100)))))
+  (testing "generates positive numbers"
+    (is (every? true?
+          (map #(clojure.core/pos? %)
+            (gen/sample (spec/gen sv-number/positive?)))))))
 
-  (testing "returns false when provided value is a negative number"
-    (let [target -18]
-      (is (false? (sv-number/positive? target)))))
+(deftest negative?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any negative integer"
+       :samples [(int -1) (int -35) (int -100000) Integer/MIN_VALUE])
+     (sv-cases/true-case "any negative long"
+       :samples [-1 -35 -100000 Long/MIN_VALUE])
+     (sv-cases/true-case "any negative float"
+       :samples [(float -0.00000000000001)
+                 (float -1.23) (float -35.456) (float -100000)
+                 (- Float/MIN_VALUE)
+                 (- Float/MAX_VALUE)])
+     (sv-cases/true-case "any negative double"
+       :samples [-0.000000000000000000001
+                 -1.23 -35.456 -100000
+                 (- Double/MIN_VALUE)
+                 (- Double/MAX_VALUE)])
+     (sv-cases/true-case "any negative big int"
+       :samples [(biginteger -1) (biginteger -35) (biginteger -100000)
+                 (bigint "-111111111111111999999999999991111111")])
+     (sv-cases/true-case "any negative big integer"
+       :samples [-1N -35N -100000N
+                 (biginteger "-111111111111111999999999999991111111")])
+     (sv-cases/true-case "any negative big decimal"
+       :samples [(bigdec -1.123) (bigdec -35.2) (bigdec -100000)
+                 (bigdec "-111111111111111999999999999991111111.4567")])
+     (sv-cases/false-case "any zero value number"
+       :samples [(int 0) 0 (float 0) 0.0 0M 0N (biginteger 0)])
+     (sv-cases/false-case "any positive int"
+       :samples [(int 1) (int 35) (int 100000) Integer/MAX_VALUE])
+     (sv-cases/false-case "any positive long"
+       :samples [1 35 100000 Long/MAX_VALUE])
+     (sv-cases/false-case "any positive float"
+       :samples [(float 0.00000000000001)
+                 (float 1.23) (float 35.456) (float 100000)
+                 Float/MIN_VALUE
+                 Float/MAX_VALUE])
+     (sv-cases/false-case "any positive double"
+       :samples [0.000000000000000000001
+                 1.23 35.456 100000
+                 Double/MIN_VALUE
+                 Double/MAX_VALUE])
+     (sv-cases/false-case "any positive big int"
+       :samples [1N 35N 100000N
+                 (bigint "111111111111111999999999999991111111")])
+     (sv-cases/false-case "any positive big integer"
+       :samples [(biginteger 1) (biginteger 35) (biginteger 100000)
+                 (biginteger "111111111111111999999999999991111111")])
+     (sv-cases/false-case "any positive big decimal"
+       :samples [(bigdec 1.123) (bigdec 35.2) (bigdec 100000)
+                 (bigdec "111111111111111999999999999991111111.4567")])
+     (sv-cases/false-case "any number as a string"
+       :samples ["1" "-1" "100.2" "-100.45"])
+     (sv-cases/false-case "a non-number"
+       :samples [true false "not-an-integer"])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-number/negative?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-  (testing "returns false when provided value is not a string"
-    (let [target true]
-      (is (false? (sv-number/positive? target)))))
+(deftest negative?-as-requirement
+  (is (= :must-be-a-negative-number
+        (sv-core/pred-requirement
+          'spec.validate.number/negative?))))
 
-  (testing "returns false when provided value is nil"
-    (let [target nil]
-      (is (false? (sv-number/positive? target))))))
+(deftest clojure-core-neg?-as-requirement
+  (is (= :must-be-a-negative-number
+        (sv-core/pred-requirement
+          'clojure.core/neg?))))
 
-(deftest for-negative?
-  (testing "returns true when provided string represents a negative number"
-    (let [target "-54.22"]
-      (is (true? (sv-number/negative? target)))))
+(deftest clojure-core-neg-int?-as-requirement
+  (is (= :must-be-a-negative-integer
+        (sv-core/pred-requirement
+          'clojure.core/neg-int?))))
 
-  #_(testing "returns true when provided value is a negative number"
-      (let [target -54.22]
-        (is (true? (sv-number/negative? target)))))
+(deftest negative?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample (spec/gen sv-number/negative?) 100)))))
+  (testing "generates negative numbers"
+    (is (every? true?
+          (map #(clojure.core/neg? %)
+            (gen/sample (spec/gen sv-number/negative?)))))))
 
-  (testing "returns false when provided string represents a zero"
-    (let [target "0.00"]
-      (is (false? (sv-number/negative? target)))))
+(deftest zero?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any zero value number"
+       :samples [(int 0) 0 (float 0.0) 0.0 0M 0N (biginteger 0)])
+     (sv-cases/false-case "any negative integer"
+       :samples [(int -1) (int -35) (int -100000) Integer/MIN_VALUE])
+     (sv-cases/false-case "any negative long"
+       :samples [-1 -35 -100000 Long/MIN_VALUE])
+     (sv-cases/false-case "any negative float"
+       :samples [(float -0.00000000000001)
+                 (float -1.23) (float -35.456) (float -100000)
+                 (- Float/MIN_VALUE)
+                 (- Float/MAX_VALUE)])
+     (sv-cases/false-case "any negative double"
+       :samples [-0.000000000000000000001
+                 -1.23 -35.456 -100000
+                 (- Double/MIN_VALUE)
+                 (- Double/MAX_VALUE)])
+     (sv-cases/false-case "any negative big int"
+       :samples [(biginteger -1) (biginteger -35) (biginteger -100000)
+                 (bigint "-111111111111111999999999999991111111")])
+     (sv-cases/false-case "any negative big integer"
+       :samples [-1N -35N -100000N
+                 (biginteger "-111111111111111999999999999991111111")])
+     (sv-cases/false-case "any negative big decimal"
+       :samples [(bigdec -1.123) (bigdec -35.2) (bigdec -100000)
+                 (bigdec "-111111111111111999999999999991111111.4567")])
+     (sv-cases/false-case "any positive int"
+       :samples [(int 1) (int 35) (int 100000) Integer/MAX_VALUE])
+     (sv-cases/false-case "any positive long"
+       :samples [1 35 100000 Long/MAX_VALUE])
+     (sv-cases/false-case "any positive float"
+       :samples [(float 0.00000000000001)
+                 (float 1.23) (float 35.456) (float 100000)
+                 Float/MIN_VALUE
+                 Float/MAX_VALUE])
+     (sv-cases/false-case "any positive double"
+       :samples [0.000000000000000000001
+                 1.23 35.456 100000
+                 Double/MIN_VALUE
+                 Double/MAX_VALUE])
+     (sv-cases/false-case "any positive big int"
+       :samples [1N 35N 100000N
+                 (bigint "111111111111111999999999999991111111")])
+     (sv-cases/false-case "any positive big integer"
+       :samples [(biginteger 1) (biginteger 35) (biginteger 100000)
+                 (biginteger "111111111111111999999999999991111111")])
+     (sv-cases/false-case "any positive big decimal"
+       :samples [(bigdec 1.123) (bigdec 35.2) (bigdec 100000)
+                 (bigdec "111111111111111999999999999991111111.4567")])
+     (sv-cases/false-case "any number as a string"
+       :samples ["1" "-1" "100.2" "-100.45"])
+     (sv-cases/false-case "a non-number"
+       :samples [true false "not-an-integer"])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-number/zero?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-  (testing "returns false when provided value is zero"
-    (let [target 0.00]
-      (is (false? (sv-number/negative? target)))))
+(deftest zero?-as-requirement
+  (is (= :must-be-zero
+        (sv-core/pred-requirement
+          'spec.validate.number/zero?))))
 
-  (testing "returns false when provided string represents a negative number"
-    (let [target "52.30"]
-      (is (false? (sv-number/negative? target)))))
+(deftest clojure-core-zero?-as-requirement
+  (is (= :must-be-zero
+        (sv-core/pred-requirement
+          'clojure.core/zero?))))
 
-  (testing "returns false when provided value is a negative number"
-    (let [target 18]
-      (is (false? (sv-number/negative? target)))))
-
-  (testing "returns false when provided value is not a string"
-    (let [target true]
-      (is (false? (sv-number/negative? target)))))
-
-  (testing "returns false when provided value is nil"
-    (let [target nil]
-      (is (false? (sv-number/negative? target))))))
-
-(deftest for-zero?
-  (testing "returns true when provided string represents zero"
-    (let [target "0.00"]
-      (is (true? (sv-number/zero? target)))))
-
-  (testing "returns false when provided string does not represents zero"
-    (let [target "12.22"]
-      (is (false? (sv-number/zero? target)))))
-
-  (testing "returns false when provided value is not a string"
-    (let [target true]
-      (is (false? (sv-number/zero? target)))))
-
-  (testing "returns false when provided value is nil"
-    (let [target nil]
-      (is (false? (sv-number/zero? target))))))
+(deftest zero?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample (spec/gen sv-number/zero?) 100)))))
+  (testing "generates zero numbers"
+    (is (every? true?
+          (map #(= 0 %)
+            (gen/sample (spec/gen sv-number/zero?)))))))
