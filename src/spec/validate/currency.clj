@@ -4,9 +4,9 @@
    [clojurewerkz.money.currencies :as money-currencies]
 
    [spec.validate.core :as sv-core]
-   [spec.validate.utils :as sv-utils]))
+   [spec.validate.utils :as sv-utils])
+  (:import [com.ibm.icu.util Currency]))
 
-;; currency
 (defn currency-amount?
   "Returns true if the provided value is a string representing a currency
   amount, else returns false."
@@ -28,3 +28,6 @@
   'spec.validate.predicates/currency-code?
   [_]
   :must-be-a-currency-code)
+
+(comment
+  (set (map (fn* [p1__359880#] (.getCurrencyCode p1__359880#)) (Currency/getAvailableCurrencies))))

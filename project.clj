@@ -18,11 +18,11 @@
             [lein-bikeshed "0.5.2"]
             [jonase/eastwood "1.4.0"]]
 
-  :dependencies [[clj-time "0.15.2"]
-                 [clojurewerkz/money "1.11.0"]
-                 [com.ibm.icu/icu4j "72.1"]
+  :dependencies [[clojurewerkz/money "1.11.0"]
                  [com.googlecode.libphonenumber/libphonenumber "8.13.12"]
-                 [lambdaisland/uri "1.19.155"]]
+                 [com.ibm.icu/icu4j "72.1"]
+                 [lambdaisland/uri "1.19.155"]
+                 [com.widdindustries/cljc.java-time "0.1.21"]]
 
   :profiles
   {:shared

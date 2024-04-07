@@ -6,21 +6,11 @@
 
    [spec.validate.core :as sv-core]
    [spec.validate.number :as sv-number]
+   [spec.validate.utils :as sv-utils]
 
    [spec.validate.test-support.cases :as sv-cases]
-   [spec.validate.utils :as sv-utils])
-  (:import
-   [java.text DecimalFormat]
-   [java.util Locale]
-   [java.util.regex Pattern]))
-
-(defmacro with-locale [^Locale locale & body]
-  `(let [default-locale# (Locale/getDefault)]
-     (try
-       (Locale/setDefault ~locale)
-       ~@body
-       (finally
-         (Locale/setDefault default-locale#)))))
+   [spec.validate.test-support.locales :as sv-locales])
+  (:import [java.util Locale]))
 
 (deftest integer?-as-predicate
   (doseq
@@ -91,12 +81,14 @@
        (sv-cases/false-case "an empty string"
          :sample "")
        (sv-cases/false-case "nil" :sample nil)]]
-      (let [{:keys [samples satisfied? title]} case
+      (let [{:keys [samples satisfied? title locale]} case
             pred sv-number/integer-string?]
         (testing (str "for " title)
-          (is (every? #(= % satisfied?) (map pred samples))
-            (str "unsatisfied for: "
-              (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
+          (sv-locales/with-locale locale
+            (is (every? #(= % satisfied?) (map pred samples))
+              (str "unsatisfied for: "
+                (into #{}
+                  (filter #(not (= (pred %) satisfied?)) samples)))))))))
 
   (testing "locale specific cases"
     (doseq
@@ -128,7 +120,7 @@
       (let [{:keys [samples satisfied? title locale]} case
             pred sv-number/integer-string?]
         (testing (str "for " title)
-          (with-locale locale
+          (sv-locales/with-locale locale
             (is (every? #(= % satisfied?) (map pred samples))
               (str "unsatisfied for: "
                 (into #{} (filter #(not (= (pred %) satisfied?))
@@ -240,7 +232,7 @@
       (let [{:keys [samples satisfied? title locale]} case
             pred sv-number/decimal-string?]
         (testing (str "for " title)
-          (with-locale locale
+          (sv-locales/with-locale locale
             (is (every? #(= % satisfied?) (map pred samples))
               (str "unsatisfied for: "
                 (into #{}
@@ -284,7 +276,7 @@
       (let [{:keys [samples satisfied? title locale]} case
             pred sv-number/decimal-string?]
         (testing (str "for " title)
-          (with-locale locale
+          (sv-locales/with-locale locale
             (is (every? #(= % satisfied?) (map pred samples))
               (str "unsatisfied for: "
                 (into #{} (filter #(not (= (pred %) satisfied?))

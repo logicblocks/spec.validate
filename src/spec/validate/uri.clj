@@ -1,4 +1,4 @@
-(ns spec.validate.url
+(ns spec.validate.uri
   (:require
    [lambdaisland.uri :as uri]
 

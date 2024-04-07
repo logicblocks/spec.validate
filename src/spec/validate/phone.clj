@@ -7,12 +7,12 @@
 
 (def ^:dynamic *default-phone-number-region-code* "GB")
 
-(def ^:private ^PhoneNumberUtil phone-number-util
-  (PhoneNumberUtil/getInstance))
-
 (defn- string->PhoneNumber [value]
   (try
-    (.parse phone-number-util value *default-phone-number-region-code*)
+    (.parse
+      (PhoneNumberUtil/getInstance)
+      value
+      *default-phone-number-region-code*)
     (catch NumberParseException _
       nil)))
 
@@ -23,7 +23,9 @@
   `*default-phone-number-region-code*`."
   [value]
   (sv-utils/exception->false
-    (.isValidNumber phone-number-util (string->PhoneNumber value))))
+    (.isValidNumber
+      (PhoneNumberUtil/getInstance)
+      (string->PhoneNumber value))))
 
 (defmethod sv-core/pred-requirement
   'spec.validate.predicates/phone-number?
