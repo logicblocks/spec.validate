@@ -3,20 +3,28 @@
    [com.ibm.icu.util ULocale$Category]))
 
 (defrecord ULocale
-           [instance
-            name
+           [name
             base-name
             language
             script
             country
             variant
+            display-name
+            display-name-with-dialect
+            display-language
+            display-language-with-dialect
+            display-script
+            display-country
+            display-variant
             iso3-language
-            is03-country
+            iso3-country
+            character-orientation
+            line-orientation
             right-to-left?])
 
 (defn wrap-u-locale [^com.ibm.icu.util.ULocale locale]
   (map->ULocale
-    {:instance                      locale
+    {::instance                     locale
      :name                          (.getName locale)
      :base-name                     (.getBaseName locale)
      :language                      (.getLanguage locale)
@@ -37,7 +45,7 @@
      :right-to-left?                (.isRightToLeft locale)}))
 
 (defn unwrap-u-locale ^com.ibm.icu.util.ULocale [^ULocale locale]
-  (:instance locale))
+  (::instance locale))
 
 (def categories
   {:format  ULocale$Category/FORMAT

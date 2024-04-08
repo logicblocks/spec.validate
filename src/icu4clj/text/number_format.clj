@@ -5,8 +5,7 @@
    [com.ibm.icu.util ULocale$Category]))
 
 (defrecord DecimalFormatSymbols
-           [instance
-            locale
+           [locale
             u-locale
             digits
             zero-digit
@@ -32,9 +31,10 @@
 (defn wrap-decimal-format-symbols
   [^com.ibm.icu.text.DecimalFormatSymbols symbols]
   (map->DecimalFormatSymbols
-    {:instance                     symbols
+    {::instance                    symbols
      :locale                       (.getLocale symbols)
-     :u-locale                     (u-locale/wrap-u-locale (.getULocale symbols))
+     :u-locale
+     (u-locale/wrap-u-locale (.getULocale symbols))
      :digits                       (vec (.getDigitStrings symbols))
      :zero-digit                   (String/valueOf (.getZeroDigit symbols))
      :infinity                     (.getInfinity symbols)
@@ -66,7 +66,7 @@
 (defn unwrap-decimal-format-symbols
   ^com.ibm.icu.text.DecimalFormatSymbols
   [^DecimalFormatSymbols symbols]
-  (:instance symbols))
+  (::instance symbols))
 
 (defn decimal-format-symbols
   ([]
