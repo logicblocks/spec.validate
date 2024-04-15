@@ -29,6 +29,7 @@
    {:dependencies
     [[org.clojure/clojure "1.11.1"]
      [org.clojure/test.check "1.1.1"]
+     [org.clojure/data.csv "1.1.0"]
 
      [vlaaad/reveal "1.3.282"]
 
@@ -42,7 +43,7 @@
 
    :reveal-specific
    {:repl-options {:nrepl-middleware [vlaaad.reveal.nrepl/middleware]}
-    :jvm-opts     ["-Dvlaaad.reveal.prefs={:theme :dark}"]}
+    :jvm-opts     ["-Dvlaaad.reveal.prefs={:theme :light}"]}
 
    :test-specific
    {:eftest {:multithread? false}}

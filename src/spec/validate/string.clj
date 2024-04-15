@@ -14,9 +14,19 @@
       (fn [^long i] (Character/toString i))
       (apply gen/one-of [generators]))))
 
-(defn gen-string-unicode [pattern]
-  (gen/fmap clojure.string/join
-    (gen/vector (gen-character-string-unicode pattern))))
+(defn gen-string-unicode
+  ([pattern]
+   (gen/fmap clojure.string/join
+     (gen/vector (gen-character-string-unicode pattern))))
+  ([pattern {:keys [min-length max-length]}]
+   (assert
+     (and
+       (not (nil? min-length))
+       (not (nil? max-length)))
+     "Both `min-length` and `max-length` must be provided")
+   (gen/fmap clojure.string/join
+     (gen/vector (gen-character-string-unicode pattern)
+       min-length max-length))))
 
 (declare
   string?
