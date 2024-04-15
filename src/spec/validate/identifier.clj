@@ -1,20 +1,26 @@
 (ns spec.validate.identifier
   (:require
-   [spec.validate.core :as sv-core]
+   [clojure.spec.gen.alpha :as gen]
    [spec.validate.utils :as sv-utils]))
 
-;; identifiers
-(def ^:private uuid-v4-regex
-  (re-pattern
-    (str "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-"
-      "[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")))
+(declare
+  uuid-string?)
 
-(defn uuid-v4?
-  "Returns true if the provided value is a string representing a v4 UUID,
+(def ^:private uuid-pattern
+  (let [hex-pattern "[a-fA-F0-9]"]
+    (re-pattern
+      (str "^"
+        hex-pattern "{8}" "-"
+        hex-pattern "{4}" "-"
+        hex-pattern "{4}" "-"
+        hex-pattern "{4}" "-"
+        hex-pattern "{12}" "$"))))
+
+(sv-utils/def-validate-pred uuid-string?
+  "Returns true if the provided value is an ISO-4217 currency code string,
   else returns false."
   [value]
-  (sv-utils/exception->false (boolean (re-matches uuid-v4-regex value))))
-
-(defmethod sv-core/pred-requirement 'spec.validate.predicates/uuid-v4?
-  [_]
-  :must-be-a-v4-uuid)
+  {:requirement :must-be-a-uuid-string
+   :gen #(gen/fmap str (gen/gen-for-pred uuid?))}
+  (sv-utils/exception->false
+    (sv-utils/re-satisfies? uuid-pattern value)))

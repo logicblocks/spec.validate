@@ -1,30 +1,61 @@
 (ns spec.validate.identifier-test
   (:require
    [clojure.test :refer [deftest is testing]]
+   [clojure.spec.alpha :as spec]
+   [clojure.spec.gen.alpha :as gen]
 
-   [spec.validate.identifier :as sv-identifier]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.identifier :as sv-identifier]
 
-(deftest for-uuid-v4?
-  (testing "returns true when provided string represents a lower case v4 UUID"
-    (let [target "2571f835-bb47-4637-a0ed-dbfc82583f7d"]
-      (is (true? (sv-identifier/uuid-v4? target)))))
+   [spec.validate.test-support.cases :as sv-cases]))
 
-  (testing "returns true when provided string represents a upper case v4 UUID"
-    (let [target "2571F835-BB47-4637-A0ED-DBFC82583F7D"]
-      (is (true? (sv-identifier/uuid-v4? target)))))
+(deftest uuid-string?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any UUID string"
+       :samples ["c09ac12c-036a-43b4-9ac1-2c036a43b4c9"
+                 "0081F399-287F-42CE-81F3-99287F22CE3D"
+                 "00000000-0000-0000-0000-000000000000"
+                 "ffffffff-ffff-ffff-ffff-ffffffffffff"
+                 "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"])
+     (sv-cases/false-case "incorrectly formatted UUID strings"
+       :samples ["c09a-c12c-036a-43b4-9ac1-2c03-6a43-b4c9"
+                 "0081F399287F42CE81F399287F22CE3D"
+                 "00000000-0000-0000-0000-0000"])
+     (sv-cases/false-case "strings that aren't UUID-like at all"
+       :samples ["the quick brown fox jumped over the lazy dog"
+                 "23.6"
+                 "true"])
+     (sv-cases/false-case "a non-string"
+       :samples [true false 35.4 #{"GBP" "USD"}])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-identifier/uuid-string?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-  (testing "returns false when provided string is not a v4 UUID"
-    (let [target "69f7a4cc-79a0-11e9-8f9e-2a86e4085a59"]
-      (is (false? (sv-identifier/uuid-v4? target)))))
+(deftest uuid-string?-as-requirement
+  (is (= :must-be-a-uuid-string
+        (sv-core/pred-requirement
+          'spec.validate.identifier/uuid-string?))))
 
-  (testing "returns false when provided string is not a UUID"
-    (let [target "the quick brown fox"]
-      (is (false? (sv-identifier/uuid-v4? target)))))
-
-  (testing "returns false when provided value is not a string"
-    (let [target 25]
-      (is (false? (sv-identifier/uuid-v4? target)))))
-
-  (testing "returns false when provided value is nil"
-    (let [target nil]
-      (is (false? (sv-identifier/uuid-v4? target))))))
+(deftest uuid-string?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen sv-identifier/uuid-string?) 100)))))
+  (testing "does not generate empty string"
+    (is (every? false?
+          (map #(= "" %)
+            (gen/sample
+              (spec/gen sv-identifier/uuid-string?) 100)))))
+  (testing "generates unique UUIDs"
+    (let [codes
+          (into #{}
+            (gen/sample
+              (spec/gen sv-identifier/uuid-string?)
+              100))]
+      (is (= (count codes) 100)))))
