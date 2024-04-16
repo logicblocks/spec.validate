@@ -1,18 +1,96 @@
 (ns spec.validate.boolean-test
   (:require
-   [clojure.test :refer [deftest is testing]]
+    [clojure.set :as set]
+    [clojure.spec.alpha :as spec]
+    [clojure.spec.gen.alpha :as gen]
+    [clojure.string :as string]
+    [clojure.test :refer [deftest is testing]]
 
-   [spec.validate.boolean :as sv-boolean]))
+    [spec.validate.core :as sv-core]
+    [spec.validate.boolean :as sv-boolean]
 
-(deftest for-boolean?
-  (testing "returns true when provided value is a string"
-    (let [target true]
-      (is (true? (sv-boolean/boolean? target)))))
+    [spec.validate.test-support.cases :as sv-cases]))
 
-  (testing "returns false when provided value is not a string"
-    (let [target "string"]
-      (is (false? (sv-boolean/boolean? target)))))
+(deftest boolean?-as-predicate
+  (doseq
+    [case
+     [(sv-cases/true-case "booleans"
+        :samples [true false
+                  Boolean/TRUE Boolean/FALSE
+                  (Boolean/valueOf true) (Boolean/valueOf false)])
+      (sv-cases/false-case "boolean strings"
+        :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
+      (sv-cases/false-case "non-booleans"
+        :samples ["the quick brown fox jumped over the lazy dog"
+                  35.4 #{"GBP" "USD"}])
+      (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-boolean/boolean?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-  (testing "returns false when provided value is nil"
-    (let [target nil]
-      (is (false? (sv-boolean/boolean? target))))))
+(deftest boolean?-as-requirement
+  (is (= :must-be-a-boolean
+        (sv-core/pred-requirement
+          'spec.validate.boolean/boolean?)))
+  (is (= :must-be-a-boolean
+        (sv-core/pred-requirement
+          'clojure.core/boolean?))))
+
+(deftest boolean?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen sv-boolean/boolean?) 100)))))
+  (testing "generates only true and false values"
+    (let [booleans
+          (into #{}
+            (gen/sample
+              (spec/gen sv-boolean/boolean?)
+              100))]
+      (is (= #{true false} booleans)))))
+
+(deftest boolean-string?-as-predicate
+  (doseq
+    [case
+     [(sv-cases/true-case "boolean strings"
+        :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
+      (sv-cases/false-case "booleans"
+        :samples [true false
+                  Boolean/TRUE Boolean/FALSE
+                  (Boolean/valueOf true) (Boolean/valueOf false)])
+      (sv-cases/false-case "non-strings"
+        :samples [35.4 #{"GBP" "USD"}])
+      (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-boolean/boolean-string?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
+
+(deftest boolean-string?-as-requirement
+  (is (= :must-be-a-boolean-string
+        (sv-core/pred-requirement
+          'spec.validate.boolean/boolean-string?))))
+
+(deftest boolean-string?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen sv-boolean/boolean?) 100)))))
+  (testing "generates various casings of true and false strings"
+    (let [strings
+          (into #{}
+            (gen/sample
+              (spec/gen sv-boolean/boolean-string?)
+              100))]
+      (is (> (count strings) 2))
+      (is (empty?
+            (set/difference
+              (into #{} (map string/lower-case strings))
+              #{"true" "false"}))))))
