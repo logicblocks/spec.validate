@@ -1,11 +1,11 @@
 (ns spec.validate.boolean
   (:refer-clojure :exclude [boolean?])
   (:require
-    [clojure.spec.gen.alpha :as gen]
+   [clojure.spec.gen.alpha :as gen]
 
-    [clojure.string :as string]
+   [clojure.string :as string]
 
-    [spec.validate.utils :as sv-utils]))
+   [spec.validate.utils :as sv-utils]))
 
 (declare
   boolean?

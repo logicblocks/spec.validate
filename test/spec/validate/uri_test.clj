@@ -182,8 +182,7 @@
                 acc
                 (let [encoded (map second (re-seq #"(\%..)" segment))
                       remainder (string/replace segment #"\%.." "")
-                      plain (map #(Character/toString ^long %)
-                              (sv-unicode/unicode-codepoint-seq remainder))]
+                      plain (map str remainder)]
                   {:encoded (into (:encoded acc) encoded)
                    :plain   (into (:plain acc) plain)})))
             {:encoded #{}

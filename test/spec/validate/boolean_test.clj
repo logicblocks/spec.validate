@@ -1,29 +1,29 @@
 (ns spec.validate.boolean-test
   (:require
-    [clojure.set :as set]
-    [clojure.spec.alpha :as spec]
-    [clojure.spec.gen.alpha :as gen]
-    [clojure.string :as string]
-    [clojure.test :refer [deftest is testing]]
+   [clojure.set :as set]
+   [clojure.spec.alpha :as spec]
+   [clojure.spec.gen.alpha :as gen]
+   [clojure.string :as string]
+   [clojure.test :refer [deftest is testing]]
 
-    [spec.validate.core :as sv-core]
-    [spec.validate.boolean :as sv-boolean]
+   [spec.validate.core :as sv-core]
+   [spec.validate.boolean :as sv-boolean]
 
-    [spec.validate.test-support.cases :as sv-cases]))
+   [spec.validate.test-support.cases :as sv-cases]))
 
 (deftest boolean?-as-predicate
   (doseq
-    [case
-     [(sv-cases/true-case "booleans"
-        :samples [true false
-                  Boolean/TRUE Boolean/FALSE
-                  (Boolean/valueOf true) (Boolean/valueOf false)])
-      (sv-cases/false-case "boolean strings"
-        :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
-      (sv-cases/false-case "non-booleans"
-        :samples ["the quick brown fox jumped over the lazy dog"
-                  35.4 #{"GBP" "USD"}])
-      (sv-cases/false-case "nil" :sample nil)]]
+   [case
+    [(sv-cases/true-case "booleans"
+       :samples [true false
+                 Boolean/TRUE Boolean/FALSE
+                 (Boolean/valueOf true) (Boolean/valueOf false)])
+     (sv-cases/false-case "boolean strings"
+       :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
+     (sv-cases/false-case "non-booleans"
+       :samples ["the quick brown fox jumped over the lazy dog"
+                 35.4 #{"GBP" "USD"}])
+     (sv-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sv-boolean/boolean?]
       (testing (str "for " title)
@@ -55,16 +55,16 @@
 
 (deftest boolean-string?-as-predicate
   (doseq
-    [case
-     [(sv-cases/true-case "boolean strings"
-        :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
-      (sv-cases/false-case "booleans"
-        :samples [true false
-                  Boolean/TRUE Boolean/FALSE
-                  (Boolean/valueOf true) (Boolean/valueOf false)])
-      (sv-cases/false-case "non-strings"
-        :samples [35.4 #{"GBP" "USD"}])
-      (sv-cases/false-case "nil" :sample nil)]]
+   [case
+    [(sv-cases/true-case "boolean strings"
+       :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
+     (sv-cases/false-case "booleans"
+       :samples [true false
+                 Boolean/TRUE Boolean/FALSE
+                 (Boolean/valueOf true) (Boolean/valueOf false)])
+     (sv-cases/false-case "non-strings"
+       :samples [35.4 #{"GBP" "USD"}])
+     (sv-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sv-boolean/boolean-string?]
       (testing (str "for " title)
