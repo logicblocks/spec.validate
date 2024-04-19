@@ -1,106 +1,255 @@
 (ns spec.validate.collection-test
   (:require
+   [clojure.spec.gen.alpha :as gen]
+   [clojure.string :as string]
    [clojure.test :refer [deftest is testing]]
 
-   [spec.validate.collection :as sv-collection]))
+   [spec.validate.collection :as sv-collection]
 
-(deftest for-not-empty?
-  (testing "returns true when provided collection has many items"
-    (let [target ["first" "second" "third"]]
-      (is (true? (sv-collection/not-empty? target)))))
+   [spec.validate.core :as sv-core]
+   [spec.validate.test-support.cases :as sv-cases]))
 
-  (testing "returns true when provided collection has one item"
-    (let [target ["first"]]
-      (is (true? (sv-collection/not-empty? target)))))
+(defn gen-string-of-length
+  ([length]
+   (gen/fmap string/join
+     (gen/vector (gen/char-ascii) length)))
+  ([min max]
+   (gen/fmap string/join
+     (gen/vector (gen/char-ascii) min max))))
 
-  (testing "returns false when provided collection is empty"
-    (let [target []]
-      (is (false? (sv-collection/not-empty? target)))))
+(defn gen-seq-of-length
+  ([length]
+   (gen/fmap (partial map str)
+     (gen/vector (gen/uuid) length)))
+  ([min max]
+   (gen/fmap (partial map str)
+     (gen/vector (gen/uuid) min max))))
 
-  (testing "returns false when provided value is not a collection"
-    (let [target true]
-      (is (false? (sv-collection/not-empty? target)))))
+(defn gen-entries-of-length
+  ([length]
+   (gen/vector
+     (gen/tuple
+       (gen/fmap keyword
+         (gen/fmap string/join
+           (gen/vector (gen/char-ascii) 10)))
+       (gen/large-integer))
+     length))
+  ([min max]
+   (gen/vector
+     (gen/tuple
+       (gen/fmap keyword
+         (gen/fmap string/join
+           (gen/vector (gen/char-ascii) 10)))
+       (gen/large-integer))
+     min max)))
 
-  (testing "returns false when provided value is nil"
-    (let [target true]
-      (is (false? (sv-collection/not-empty? target))))))
+(deftest not-empty?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any non-empty countable"
+       :samples ["this string is not empty"
+                 '(1 2 3)
+                 [4 5 6]
+                 #{7 8 9}
+                 {:ten 11 :twelve 13}])
+     (sv-cases/false-case "any empty countable"
+       :samples ["" '() [] #{} {}])
+     (sv-cases/false-case "non-countables"
+       :samples [true (fn []) 26 45.9 10M])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-collection/not-empty?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-(deftest for-length-equal-to?
-  (testing "returns a validator that"
-    (testing "returns true when the provided string has the specified length"
-      (let [target "abcdef"
-            length-equal-to-6? (sv-collection/length-equal-to? 6)]
-        (is (true? (length-equal-to-6? target)))))
+(deftest not-empty?-as-requirement
+  (is (= :must-not-be-empty
+        (sv-core/pred-requirement
+          'spec.validate.collection/not-empty?))))
 
-    (testing "returns false when the provided string has a different length"
-      (let [target "abcdefgh"
-            length-equal-to-6? (sv-collection/length-equal-to? 6)]
-        (is (false? (length-equal-to-6? target)))))
+(deftest empty?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any empty countable"
+       :samples ["" '() [] #{} {}])
+     (sv-cases/false-case "any non-empty countable"
+       :samples ["this string is not empty"
+                 '(1 2 3)
+                 [4 5 6]
+                 #{7 8 9}
+                 {:ten 11 :twelve 13}])
+     (sv-cases/false-case "non-countables"
+       :samples [true (fn []) 26 45.9 10M])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-collection/empty?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-    (testing "returns false when the provided value is not a string"
-      (let [target 25
-            length-equal-to-6? (sv-collection/length-equal-to? 6)]
-        (is (false? (length-equal-to-6? target)))))
+(deftest empty?-as-requirement
+  (is (= :must-be-empty
+        (sv-core/pred-requirement
+          'spec.validate.collection/empty?)))
+  (is (= :must-be-empty
+        (sv-core/pred-requirement
+          'clojure.core/empty?))))
 
-    (testing "returns false when the provided value is nil"
-      (let [target nil
-            length-equal-to-6? (sv-collection/length-equal-to? 6)]
-        (is (false? (length-equal-to-6? target)))))))
+(deftest length-equal-to-x?-as-predicate
+  (doseq
+   [x (range 1 11)
+    case
+    [(sv-cases/true-case (str "any countable with " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length x))
+                      items (gen/generate (gen-seq-of-length x))
+                      entries (gen/generate (gen-entries-of-length x))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case (str "any countable with less than " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length 0 (- x 1)))
+                      items (gen/generate (gen-seq-of-length 0 (- x 1)))
+                      entries (gen/generate (gen-entries-of-length (- x 1)))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case (str "any countable with more than " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length (+ x 1) 25))
+                      items (gen/generate (gen-seq-of-length (+ x 1) 25))
+                      entries (gen/generate (gen-entries-of-length (+ x 1)))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case "non-countables"
+       :samples [true (fn []) 26 45.9 10M])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred (ns-resolve
+                 (find-ns 'spec.validate.collection)
+                 (symbol (str "length-equal-to-" x "?")))]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-(deftest for-length-less-than?
-  (testing "returns a validator that"
-    (testing
-     "returns true when the provided string has length less than specified"
-      (let [target "abcdef"
-            length-less-than-10? (sv-collection/length-less-than? 10)]
-        (is (true? (length-less-than-10? target)))))
+(deftest length-equal-to-x?-as-requirement
+  (doseq
+   [x (range 1 11)]
+    (is (= (keyword (str "must-have-length-equal-to-" x))
+          (sv-core/pred-requirement
+            (symbol
+              "spec.validate.collection"
+              (str "length-equal-to-" x "?")))))))
 
-    (testing "returns false when the provided string length equal to specified"
-      (let [target "abcdefghij"
-            length-less-than-10? (sv-collection/length-less-than? 10)]
-        (is (false? (length-less-than-10? target)))))
+(deftest length-less-than-x?-as-predicate
+  (doseq
+   [x (range 1 11)
+    case
+    [(sv-cases/true-case (str "any countable with less than " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length 0 (- x 1)))
+                      items (gen/generate (gen-seq-of-length 0 (- x 1)))
+                      entries (gen/generate (gen-entries-of-length (- x 1)))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case (str "any countable with " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length x))
+                      items (gen/generate (gen-seq-of-length x))
+                      entries (gen/generate (gen-entries-of-length x))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case (str "any countable with more than " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length (+ x 1) 25))
+                      items (gen/generate (gen-seq-of-length (+ x 1) 25))
+                      entries (gen/generate (gen-entries-of-length (+ x 1)))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case "non-countables"
+       :samples [true (fn []) 26 45.9 10M])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred (ns-resolve
+                 (find-ns 'spec.validate.collection)
+                 (symbol (str "length-less-than-" x "?")))]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-    (testing
-     "returns false when the provided string length greater than specified"
-      (let [target "abcdefghijkl"
-            length-less-than-10? (sv-collection/length-less-than? 10)]
-        (is (false? (length-less-than-10? target)))))
+(deftest length-less-than-x?-as-requirement
+  (doseq
+   [x (range 1 11)]
+    (is (= (keyword (str "must-have-length-less-than-" x))
+          (sv-core/pred-requirement
+            (symbol
+              "spec.validate.collection"
+              (str "length-less-than-" x "?")))))))
 
-    (testing "returns false when the provided value is not a string"
-      (let [target 25
-            length-less-than-10? (sv-collection/length-less-than? 10)]
-        (is (false? (length-less-than-10? target)))))
+(deftest length-greater-than-x?-as-predicate
+  (doseq
+   [x (range 1 11)
+    case
+    [(sv-cases/true-case (str "any countable with more than " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length (+ x 1) 25))
+                      items (gen/generate (gen-seq-of-length (+ x 1) 25))
+                      entries (gen/generate (gen-entries-of-length (+ x 1)))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case (str "any countable with " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length x))
+                      items (gen/generate (gen-seq-of-length x))
+                      entries (gen/generate (gen-entries-of-length x))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case (str "any countable with less than " x " item(s)")
+       :samples (let [string (gen/generate (gen-string-of-length 0 (- x 1)))
+                      items (gen/generate (gen-seq-of-length 0 (- x 1)))
+                      entries (gen/generate (gen-entries-of-length (- x 1)))]
+                  [string
+                   (into '() items)
+                   (into [] items)
+                   (into #{} items)
+                   (into {} entries)]))
+     (sv-cases/false-case "non-countables"
+       :samples [true (fn []) 26 45.9 10M])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred (ns-resolve
+                 (find-ns 'spec.validate.collection)
+                 (symbol (str "length-greater-than-" x "?")))]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-    (testing "returns false when the provided value is nil"
-      (let [target nil
-            length-less-than-10? (sv-collection/length-less-than? 10)]
-        (is (false? (length-less-than-10? target)))))))
-
-(deftest for-length-greater-than?
-  (testing "returns a validator that"
-    (testing
-     "returns true when the provided string has length greater than specified"
-      (let [target "abcdefghijk"
-            length-greater-than-10? (sv-collection/length-greater-than? 10)]
-        (is (true? (length-greater-than-10? target)))))
-
-    (testing "returns false when the provided string length equal to specified"
-      (let [target "abcdefghij"
-            length-greater-than-10? (sv-collection/length-greater-than? 10)]
-        (is (false? (length-greater-than-10? target)))))
-
-    (testing
-     "returns false when the provided string length less than specified"
-      (let [target "abcdef"
-            length-greater-than-10? (sv-collection/length-greater-than? 10)]
-        (is (false? (length-greater-than-10? target)))))
-
-    (testing "returns false when the provided value is not a string"
-      (let [target 25
-            length-greater-than-10? (sv-collection/length-greater-than? 10)]
-        (is (false? (length-greater-than-10? target)))))
-
-    (testing "returns false when the provided value is nil"
-      (let [target nil
-            length-greater-than-10? (sv-collection/length-greater-than? 10)]
-        (is (false? (length-greater-than-10? target)))))))
+(deftest length-greater-than-x?-as-requirement
+  (doseq
+   [x (range 1 11)]
+    (is (= (keyword (str "must-have-length-greater-than-" x))
+          (sv-core/pred-requirement
+            (symbol
+              "spec.validate.collection"
+              (str "length-greater-than-" x "?")))))))

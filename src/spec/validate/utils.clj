@@ -38,8 +38,11 @@
        ~@body)
 
      (extend-pred-with-requirement
-       (symbol (str (ns-name *ns*)) ~(name sym))
+       (symbol
+         (str (ns-name *ns*))
+         ~(name sym))
        ~(:requirement options))
 
-     (extend-pred-with-gen ~sym
-       ~(:gen options))))
+     (when ~(:gen options)
+       (extend-pred-with-gen ~sym
+         ~(:gen options)))))
