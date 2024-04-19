@@ -31,6 +31,9 @@
      [org.clojure/test.check "1.1.1"]
      [org.clojure/data.csv "1.1.0"]
 
+     [com.github.flow-storm/clojure "1.11.2-4"]
+     [com.github.flow-storm/flow-storm-dbg "3.15.1"]
+
      [vlaaad/reveal "1.3.282"]
 
      [nrepl "1.1.1"]
@@ -41,6 +44,11 @@
    {:source-paths ["dev"]
     :eftest       {:multithread? false}}
 
+   :flow-storm-specific
+   {:exclusions [org.clojure/clojure]
+    :jvm-opts   ["-Dclojure.storm.instrumentEnable=true"
+                 "-Dclojure.storm.instrumentOnlyPrefixes=spec.validate"]}
+
    :reveal-specific
    {:repl-options {:nrepl-middleware [vlaaad.reveal.nrepl/middleware]}
     :jvm-opts     ["-Dvlaaad.reveal.prefs={:theme :light}"]}
@@ -50,6 +58,9 @@
 
    :dev
    [:shared :dev-specific]
+
+   :flow-storm
+   [:shared :flow-storm-specific]
 
    :reveal
    [:shared :reveal-specific]

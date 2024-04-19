@@ -1,22 +1,98 @@
 (ns spec.validate.address-test
   (:require
-   [clojure.test :refer [deftest testing is]]
+   [clojure.test :refer [deftest is testing]]
+   [clojure.spec.alpha :as spec]
+   [clojure.spec.gen.alpha :as gen]
 
-   [spec.validate.address :as sv-address]))
+   [spec.validate.core :as sv-core]
+   [spec.validate.address :as sv-address]
 
-(deftest for-postcode?
-  (testing "returns true when provided string represents a UK postcode"
-    (let [target "EC1A 1BB"]
-      (is (true? (sv-address/postcode? target)))))
+   [spec.validate.test-support.cases :as sv-cases]))
 
-  (testing "returns false when provided string does not represent a UK postcode"
-    (let [target "the quick brown fox"]
-      (is (false? (sv-address/postcode? target)))))
+(deftest uk-postcode-formatted-string?-as-predicate
+  (doseq
+   [case
+    [(sv-cases/true-case "any uppercase standard format UK postcode"
+       :samples ["EC1A 1BB"
+                 "W1A 0AX"
+                 "M1 1AE"
+                 "B33 8TH"
+                 "CR2 6XH"
+                 "DN55 1PT"])
+     (sv-cases/true-case "any lowercase standard format UK postcode"
+       :samples ["ec1a 1bb"
+                 "w1a 0ax"
+                 "m1 1ae"
+                 "b33 8th"
+                 "cr2 6xh"
+                 "dn55 1pt"])
+      ; TODO: should this be false since the Crown Dependencies aren't the UK?
+     (sv-cases/true-case "any Crown Dependency postcode"
+       :samples ["GY8 0HG" ; Guernsey
+                 "IM1 5PD" ; Isle of Man
+                 "JE2 3AB" ; Jersey
+                 ])
+      ; TODO: should this be false since gibraltar is a British Overseas
+      ; Territory?
+     (sv-cases/true-case "Gibraltar"
+       :sample "GX11 1AA" ; Gibraltar
+       )
+      ; TODO: should this be true or false?
+     (sv-cases/true-case "British Forces Post Office post codes"
+       :samples ["BF1 1AA"
+                 "BF1 2AN"])
+     (sv-cases/false-case "some British Overseas Territories"
+       :samples ["ASCN 1ZZ" ; Ascension island
+                 "BBND 1ZZ" ; British Indian Ocean Territory
+                 "BIQQ 1ZZ" ; British Antarctic Territory
+                 "FIQQ 1ZZ" ; Falkland Islands
+                 "PCRN 1ZZ" ; Pitcairn Islands
+                 "SIQQ 1ZZ" ; South Georgia and the South Sandwich Islands
+                 "STHL 1ZZ" ; Saint Helena
+                 "TDCU 1ZZ" ; Tristan da Cunha
+                 "TKCA 1ZZ" ; Turks and Caicos Islands
+                 "AI-2640"  ; Anguilla
+                 "KY1-1600" ; Cayman Islands
+                 "MSR-1110" ; Montserrat
+                 "VG-1130"  ; British Virgin Islands
+                 "WK 06"    ; Bermuda
+                 ])
+     (sv-cases/false-case "British Forces Post Office (BFPO) codes"
+       :samples ["BFPO 801"])
+     (sv-cases/false-case "strings that aren't postcode-like at all"
+       :samples ["the quick brown fox jumped over the lazy dog"
+                 "23.6"
+                 "true"])
+     (sv-cases/false-case "a non-string"
+       :samples [true false 35.4 #{"GBP" "USD"}])
+     (sv-cases/false-case "nil" :sample nil)]]
+    (let [{:keys [samples satisfied? title]} case
+          pred sv-address/uk-postcode-formatted-string?]
+      (testing (str "for " title)
+        (is (every? #(= % satisfied?) (map pred samples))
+          (str "unsatisfied for: "
+            (into #{} (filter #(not (= (pred %) satisfied?)) samples))))))))
 
-  (testing "returns false when provided value is not a string"
-    (let [target 35]
-      (is (false? (sv-address/postcode? target)))))
+(deftest uk-postcode-formatted-string?-as-requirement
+  (is (= :must-be-a-uk-postcode
+        (sv-core/pred-requirement
+          'spec.validate.address/uk-postcode-formatted-string?))))
 
-  (testing "returns false when provided value is nil"
-    (let [target nil]
-      (is (false? (sv-address/postcode? target))))))
+(deftest uk-postcode-formatted-string?-as-generator
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen sv-address/uk-postcode-formatted-string?) 100)))))
+  (testing "does not generate empty string"
+    (is (every? false?
+          (map #(= "" %)
+            (gen/sample
+              (spec/gen sv-address/uk-postcode-formatted-string?) 100)))))
+  (testing "generates unique UK postcodes"
+    (let [postcodes
+          (into #{}
+            (gen/sample
+              (spec/gen sv-address/uk-postcode-formatted-string?)
+              100))]
+      (is (= (count postcodes) 100)))))
