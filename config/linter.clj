@@ -7,3 +7,9 @@
                                   'clojure.spec/coll-of 'clojure.spec.alpha/coll-of}
    :within-depth 6
    :reason "clojure.spec's macros `keys`, `every`, and `and` often contain `clojure.core/and` invocations with only one argument."})
+
+(disable-warning
+  {:linter :constant-test
+   :for-macro 'clojure.core/if
+   :if-inside-macroexpansion-of #{'spec.validate.utils/def-validate-pred}
+   :within-depth 10})
