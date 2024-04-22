@@ -1682,5 +1682,3 @@
   ([] (uri-schemes {}))
   ([options]
    (mapv :uri-scheme (uri-scheme-details options))))
-
-(uri-scheme-details {:status :permanent})

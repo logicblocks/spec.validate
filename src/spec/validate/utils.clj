@@ -23,8 +23,10 @@
     spec/Specize
     {:specize*
      (fn
-       ([f] (spec/specize* f pred))
-       ([_ form] (spec/with-gen (spec/spec form) gen)))}))
+       ([f]
+        (spec/specize* f pred))
+       ([f form]
+        (spec/with-gen (spec/spec form) gen)))}))
 
 (defn extend-pred-with-requirement
   [sym requirement]

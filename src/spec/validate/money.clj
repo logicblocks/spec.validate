@@ -11,12 +11,15 @@
   ; monetary-amount-string?
   )
 
+(defn gen-currency-code []
+  (gen/elements (icu-c/available-currency-codes)))
+
 (sv-utils/def-validate-pred iso4217-currency-code-string?
   "Returns true if the provided value is an ISO-4217 currency code string,
   else returns false."
   [value]
   {:requirement :must-be-an-iso4217-currency-code-string
-   :gen         #(gen/elements (icu-c/available-currency-codes))}
+   :gen         gen-currency-code}
   (contains?
     (set (icu-c/available-currency-codes))
     value))

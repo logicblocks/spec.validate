@@ -18,7 +18,8 @@
             [lein-bikeshed "0.5.2"]
             [jonase/eastwood "1.4.0"]]
 
-  :dependencies [[com.googlecode.libphonenumber/libphonenumber "8.13.12"]
+  :dependencies [[org.clojure/data.csv "1.1.0"]
+                 [com.googlecode.libphonenumber/libphonenumber "8.13.12"]
                  [com.ibm.icu/icu4j "72.1"]
                  [lambdaisland/uri "1.19.155"]
                  [com.widdindustries/cljc.java-time "0.1.21"]]
@@ -29,7 +30,6 @@
    {:dependencies
     [[org.clojure/clojure "1.11.1"]
      [org.clojure/test.check "1.1.1"]
-     [org.clojure/data.csv "1.1.0"]
 
      [com.github.flow-storm/clojure "1.11.2-4"]
      [com.github.flow-storm/flow-storm-dbg "3.15.1"]
@@ -47,7 +47,7 @@
    :flow-storm-specific
    {:exclusions [org.clojure/clojure]
     :jvm-opts   ["-Dclojure.storm.instrumentEnable=true"
-                 "-Dclojure.storm.instrumentOnlyPrefixes=spec.validate"]}
+                 "-Dclojure.storm.instrumentOnlyPrefixes=spec.validate,clojure.spec"]}
 
    :reveal-specific
    {:repl-options {:nrepl-middleware [vlaaad.reveal.nrepl/middleware]}

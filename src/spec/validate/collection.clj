@@ -1,7 +1,6 @@
 (ns spec.validate.collection
   (:refer-clojure :exclude [empty?])
   (:require
-   [spec.validate.core :as sv-core]
    [spec.validate.utils :as sv-utils]))
 
 (declare
