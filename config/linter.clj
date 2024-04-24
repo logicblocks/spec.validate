@@ -11,5 +11,5 @@
 (disable-warning
   {:linter :constant-test
    :for-macro 'clojure.core/if
-   :if-inside-macroexpansion-of #{'spec.validate.utils/def-validate-pred}
+   :if-inside-macroexpansion-of #{'spec.definition.core/def-validate-pred}
    :within-depth 10})
