@@ -8,14 +8,8 @@
 (defmacro exception->false [form]
   `(try ~form (catch Exception _# false)))
 
-(defn nil->false [value]
-  (if (nil? value) false value))
-
 (defn re-satisfies? [re s]
   (not (nil? (re-find re s))))
-
-(defn re-quote [value]
-  (Pattern/quote (str value)))
 
 (defn extend-pred-with-gen
   [pred gen]

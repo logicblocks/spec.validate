@@ -1,4 +1,4 @@
-(ns spec.definition.network.core
+(ns datatype.network.gen
   (:require
    [clojure.spec.gen.alpha :as gen]
    [clojure.string :as string]))

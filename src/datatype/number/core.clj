@@ -64,7 +64,10 @@
         fractional-decimal-pattern
         ")"))))
 
-(defn integer-string? [value]
+(defn integer-string?
+  "Returns true if the provided value is a string representing a base 10
+  integer, else returns false."
+  [value]
   (cond
     (nil? value) false
     (not (string? value)) false
@@ -74,7 +77,10 @@
         (dts/re-exact-pattern (integer-string-pattern))
         value))))
 
-(defn decimal-string? [value]
+(defn decimal-string?
+  "Returns true if the provided value is a string representing a decimal number,
+  else returns false."
+  [value]
   (cond
     (nil? value) false
     (not (string? value)) false
