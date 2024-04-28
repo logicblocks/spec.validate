@@ -16,7 +16,7 @@
    [spec.definition.string.core :as sd-string]
    [spec.definition.core :as sd]
 
-   [spec.test-support.cases :as sv-cases]))
+   [datatype.testing.cases :as sv-cases]))
 
 (defn string-sample [char-choices & {:keys [shuffle?]}]
   (let [chars

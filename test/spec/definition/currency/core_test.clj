@@ -8,27 +8,27 @@
 
    [spec.definition.currency.core :as sd-currency]
 
-   [spec.test-support.cases :as sv-cases]))
+   [datatype.testing.cases :as dt-test-cases]))
 
 (deftest iso4217-currency-code-string?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "any currency code string"
+    [(dt-test-cases/true-case "any currency code string"
        :samples ["GBP" "BAM" "CUC" "MKN" "BOV" "ARP"])
-     (sv-cases/false-case "valid but lowercase currency code strings"
+     (dt-test-cases/false-case "valid but lowercase currency code strings"
        :samples ["gbp" "bam" "cuc" "mkn" "bov" "arp"])
-     (sv-cases/false-case "additional whitespace"
+     (dt-test-cases/false-case "additional whitespace"
        :samples [" GBP " "\tBAM" " CUC "])
-     (sv-cases/false-case "any monetary amount string"
+     (dt-test-cases/false-case "any monetary amount string"
        :samples ["GBP 500.25" "BAM 0.15" "CUC 1000" "MKN -30.28"])
-     (sv-cases/false-case
+     (dt-test-cases/false-case
        "3 letter uppercase strings that look like currency codes"
        :samples ["ACU" "BGX" "HSM" "NSB"])
-     (sv-cases/false-case "currency symbols"
+     (dt-test-cases/false-case "currency symbols"
        :samples ["$" "₫" "€" "¤" "₹" "¥" "£" "₪" "₱" "₩"])
-     (sv-cases/false-case "a non-string"
+     (dt-test-cases/false-case "a non-string"
        :samples [true false 35.4 #{"GBP" "USD"}])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-currency/iso4217-currency-code-string?]
       (testing (str "for " title)

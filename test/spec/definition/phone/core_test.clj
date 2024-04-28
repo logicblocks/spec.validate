@@ -9,7 +9,7 @@
 
    [spec.definition.phone.core :as sd-phone]
 
-   [spec.test-support.cases :as sv-cases])
+   [datatype.testing.cases :as dt-test-cases])
   (:import
    [com.google.i18n.phonenumbers
     PhoneNumberUtil
@@ -18,7 +18,7 @@
 (deftest phone-number-string?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "any non-international GB phone number"
+    [(dt-test-cases/true-case "any non-international GB phone number"
        :samples ["02078910111"
                  "07891400100"
                  "08001002000"
@@ -27,25 +27,25 @@
                  "07891 400 100"
                  "0800 100 2000"
                  "0845 123 4567"])
-     (sv-cases/true-case "any international phone number"
+     (dt-test-cases/true-case "any international phone number"
        :samples ["+12126885500"
                  "+1-212-688-5500"
                  "+5551989063736"
                  "+55 (51) 98906 3736"
                  "+55-(51)-98906-3736"])
-     (sv-cases/false-case "any non-international non-GB phone number"
+     (dt-test-cases/false-case "any non-international non-GB phone number"
        :samples ["2126885500"
                  "212-688-5500"
                  "51989063736"
                  "(51) 98906 3736"
                  "(51)-98906-3736"])
-     (sv-cases/false-case "strings that aren't UUID-like at all"
+     (dt-test-cases/false-case "strings that aren't UUID-like at all"
        :samples ["the quick brown fox jumped over the lazy dog"
                  "23.6"
                  "true"])
-     (sv-cases/false-case "a non-string"
+     (dt-test-cases/false-case "a non-string"
        :samples [true false 35.4 #{"GBP" "USD"}])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-phone/phone-number-string?]
       (testing (str "for " title)

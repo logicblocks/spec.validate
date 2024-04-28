@@ -14,14 +14,14 @@
    [spec.definition.core :as sd]
    [spec.definition.email.core :as sd-email]
 
-   [spec.test-support.cases :as sv-cases]))
+   [datatype.testing.cases :as dt-test-cases]))
 
 ; email address test cases here are taken from:
 ; https://en.wikipedia.org/wiki/Email_address#Valid_email_addresses (2024-04-16)
 (deftest email-address?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "any valid email address"
+    [(dt-test-cases/true-case "any valid email address"
        :samples [; simple lowercase
                  "simple@example.com"
 
@@ -65,11 +65,11 @@
                   ; local-part ending with non-alphanumeric character from the
                   ; list of allowed printable characters
                  "user-@example.org"])
-     (sv-cases/true-case "any strictly invalid but allowed email address"
+     (dt-test-cases/true-case "any strictly invalid but allowed email address"
        :samples [; local-part is longer than 64 characters
                  (str "1234567890123456789012345678901234567890123456789"
                    "012345678901234+x@example.com")])
-     (sv-cases/false-case "any invalid email address"
+     (dt-test-cases/false-case "any invalid email address"
        :samples [; no @ character
                  "abc.example.com"
 
@@ -93,7 +93,7 @@
                  "this\\ still\"not\\allowed@example.com"
 
                  "i.like.underscores@but_they_are_not_allowed_in_this_part"])
-     (sv-cases/false-case "any strictly valid but disallowed email address"
+     (dt-test-cases/false-case "any strictly valid but disallowed email address"
        :samples [; space between quotes
                  "\" \"@example.org"
 
@@ -113,13 +113,13 @@
 
                   ; begin with underscore different syntax
                  "_test@[IPv6:2001:0db8:85a3:0000:0000:8a2e:0370:7334]"])
-     (sv-cases/false-case "strings that aren't email address-like at all"
+     (dt-test-cases/false-case "strings that aren't email address-like at all"
        :samples ["the quick brown fox jumped over the lazy dog"
                  "23.6"
                  "true"])
-     (sv-cases/false-case "a non-string"
+     (dt-test-cases/false-case "a non-string"
        :samples [true false 35.4 #{"GBP" "USD"}])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-email/email-address?]
       (testing (str "for " title)
@@ -159,7 +159,9 @@
           (into #{}
             (map
               (fn [email-address]
-                (last (string/split (second (string/split email-address #"@")) #"\.")))
+                (last
+                  (string/split
+                    (second (string/split email-address #"@")) #"\.")))
               email-addresses))]
       (is (empty?
             (set/difference
@@ -174,7 +176,9 @@
           (into #{}
             (map
               (fn [email-address]
-                (first (string/split (second (string/split email-address #"@")) #"\.")))
+                (first
+                  (string/split
+                    (second (string/split email-address #"@")) #"\.")))
               email-addresses))]
       (is (every?
             (fn [sld]

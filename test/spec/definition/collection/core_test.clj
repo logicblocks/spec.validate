@@ -8,7 +8,7 @@
 
    [spec.definition.collection.core :as sd-collection]
 
-   [spec.test-support.cases :as sv-cases]))
+   [datatype.testing.cases :as dt-test-cases]))
 
 (defn gen-string-of-length
   ([length]
@@ -47,17 +47,17 @@
 (deftest not-empty?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "any non-empty countable"
+    [(dt-test-cases/true-case "any non-empty countable"
        :samples ["this string is not empty"
                  '(1 2 3)
                  [4 5 6]
                  #{7 8 9}
                  {:ten 11 :twelve 13}])
-     (sv-cases/false-case "any empty countable"
+     (dt-test-cases/false-case "any empty countable"
        :samples ["" '() [] #{} {}])
-     (sv-cases/false-case "non-countables"
+     (dt-test-cases/false-case "non-countables"
        :samples [true (fn []) 26 45.9 10M])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-collection/not-empty?]
       (testing (str "for " title)
@@ -73,17 +73,17 @@
 (deftest empty?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "any empty countable"
+    [(dt-test-cases/true-case "any empty countable"
        :samples ["" '() [] #{} {}])
-     (sv-cases/false-case "any non-empty countable"
+     (dt-test-cases/false-case "any non-empty countable"
        :samples ["this string is not empty"
                  '(1 2 3)
                  [4 5 6]
                  #{7 8 9}
                  {:ten 11 :twelve 13}])
-     (sv-cases/false-case "non-countables"
+     (dt-test-cases/false-case "non-countables"
        :samples [true (fn []) 26 45.9 10M])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-collection/empty?]
       (testing (str "for " title)
@@ -103,7 +103,7 @@
   (doseq
    [x (range 1 11)
     case
-    [(sv-cases/true-case (str "any countable with " x " item(s)")
+    [(dt-test-cases/true-case (str "any countable with " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length x))
                       items (gen/generate (gen-seq-of-length x))
                       entries (gen/generate (gen-entries-of-length x))]
@@ -112,7 +112,8 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case (str "any countable with less than " x " item(s)")
+     (dt-test-cases/false-case
+       (str "any countable with less than " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length 0 (- x 1)))
                       items (gen/generate (gen-seq-of-length 0 (- x 1)))
                       entries (gen/generate (gen-entries-of-length (- x 1)))]
@@ -121,7 +122,8 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case (str "any countable with more than " x " item(s)")
+     (dt-test-cases/false-case
+       (str "any countable with more than " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length (+ x 1) 25))
                       items (gen/generate (gen-seq-of-length (+ x 1) 25))
                       entries (gen/generate (gen-entries-of-length (+ x 1)))]
@@ -130,9 +132,9 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case "non-countables"
+     (dt-test-cases/false-case "non-countables"
        :samples [true (fn []) 26 45.9 10M])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred (ns-resolve
                  (find-ns 'spec.definition.collection.core)
@@ -155,7 +157,8 @@
   (doseq
    [x (range 1 11)
     case
-    [(sv-cases/true-case (str "any countable with less than " x " item(s)")
+    [(dt-test-cases/true-case
+       (str "any countable with less than " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length 0 (- x 1)))
                       items (gen/generate (gen-seq-of-length 0 (- x 1)))
                       entries (gen/generate (gen-entries-of-length (- x 1)))]
@@ -164,7 +167,7 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case (str "any countable with " x " item(s)")
+     (dt-test-cases/false-case (str "any countable with " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length x))
                       items (gen/generate (gen-seq-of-length x))
                       entries (gen/generate (gen-entries-of-length x))]
@@ -173,7 +176,8 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case (str "any countable with more than " x " item(s)")
+     (dt-test-cases/false-case
+       (str "any countable with more than " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length (+ x 1) 25))
                       items (gen/generate (gen-seq-of-length (+ x 1) 25))
                       entries (gen/generate (gen-entries-of-length (+ x 1)))]
@@ -182,9 +186,9 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case "non-countables"
+     (dt-test-cases/false-case "non-countables"
        :samples [true (fn []) 26 45.9 10M])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred (ns-resolve
                  (find-ns 'spec.definition.collection.core)
@@ -207,7 +211,8 @@
   (doseq
    [x (range 1 11)
     case
-    [(sv-cases/true-case (str "any countable with more than " x " item(s)")
+    [(dt-test-cases/true-case
+       (str "any countable with more than " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length (+ x 1) 25))
                       items (gen/generate (gen-seq-of-length (+ x 1) 25))
                       entries (gen/generate (gen-entries-of-length (+ x 1)))]
@@ -216,7 +221,7 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case (str "any countable with " x " item(s)")
+     (dt-test-cases/false-case (str "any countable with " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length x))
                       items (gen/generate (gen-seq-of-length x))
                       entries (gen/generate (gen-entries-of-length x))]
@@ -225,7 +230,8 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case (str "any countable with less than " x " item(s)")
+     (dt-test-cases/false-case
+       (str "any countable with less than " x " item(s)")
        :samples (let [string (gen/generate (gen-string-of-length 0 (- x 1)))
                       items (gen/generate (gen-seq-of-length 0 (- x 1)))
                       entries (gen/generate (gen-entries-of-length (- x 1)))]
@@ -234,9 +240,9 @@
                    (into [] items)
                    (into #{} items)
                    (into {} entries)]))
-     (sv-cases/false-case "non-countables"
+     (dt-test-cases/false-case "non-countables"
        :samples [true (fn []) 26 45.9 10M])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred (ns-resolve
                  (find-ns 'spec.definition.collection.core)

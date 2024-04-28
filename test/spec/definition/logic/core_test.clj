@@ -10,21 +10,21 @@
 
    [spec.definition.logic.core :as sd-logic]
 
-   [spec.test-support.cases :as sv-cases]))
+   [datatype.testing.cases :as dt-test-cases]))
 
 (deftest boolean?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "booleans"
+    [(dt-test-cases/true-case "booleans"
        :samples [true false
                  Boolean/TRUE Boolean/FALSE
                  (Boolean/valueOf true) (Boolean/valueOf false)])
-     (sv-cases/false-case "boolean strings"
+     (dt-test-cases/false-case "boolean strings"
        :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
-     (sv-cases/false-case "non-booleans"
+     (dt-test-cases/false-case "non-booleans"
        :samples ["the quick brown fox jumped over the lazy dog"
                  35.4 #{"GBP" "USD"}])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-logic/boolean?]
       (testing (str "for " title)
@@ -57,15 +57,15 @@
 (deftest boolean-string?-as-predicate
   (doseq
    [case
-    [(sv-cases/true-case "boolean strings"
+    [(dt-test-cases/true-case "boolean strings"
        :samples ["true" "false" "TRUE" "FALSE" "True" "False"])
-     (sv-cases/false-case "booleans"
+     (dt-test-cases/false-case "booleans"
        :samples [true false
                  Boolean/TRUE Boolean/FALSE
                  (Boolean/valueOf true) (Boolean/valueOf false)])
-     (sv-cases/false-case "non-strings"
+     (dt-test-cases/false-case "non-strings"
        :samples [35.4 #{"GBP" "USD"}])
-     (sv-cases/false-case "nil" :sample nil)]]
+     (dt-test-cases/false-case "nil" :sample nil)]]
     (let [{:keys [samples satisfied? title]} case
           pred sd-logic/boolean-string?]
       (testing (str "for " title)
