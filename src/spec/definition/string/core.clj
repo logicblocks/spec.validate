@@ -8,97 +8,52 @@
 
    [spec.definition.core :as sd]))
 
-(declare
-  string?
-  blank?
-  not-blank?
-  ascii-digits?
-  lowercase-ascii-alphabetics?
-  uppercase-ascii-alphabetics?
-  ascii-alphabetics?
-  lowercase-ascii-alphanumerics?
-  uppercase-ascii-alphanumerics?
-  ascii-alphanumerics?)
+(sd/def-spec :datatype.string/string
+  {:pred clojure.core/string?
+   :gen #(gen/gen-for-pred clojure.core/string?)
+   :req :must-be-a-string})
 
-(sd/extend-pred-with-requirement
-  'clojure.core/string?
-  :must-be-a-string)
+(sd/def-spec :datatype.string/blank
+  {:pred dt-string/blank?
+   :gen dt-string-gen/gen-string-whitespace
+   :req :must-be-a-blank-string})
 
-(sd/def-validate-pred string?
-  "Returns true if the provided value is a string, else returns false."
-  [value]
-  {:requirement :must-be-a-string
-   :gen         #(gen/gen-for-pred clojure.core/string?)}
-  (clojure.core/string? value))
+(sd/def-spec :datatype.string/non-blank
+  {:pred dt-string/not-blank?
+   :gen dt-string-gen/gen-string-non-whitespace
+   :req :must-be-a-non-blank-string})
 
-(sd/def-validate-pred blank?
-  "Returns true if the provided value is an empty string or a string containing
-  only whitespace characters, else returns false."
-  [value]
-  {:requirement :must-be-a-blank-string
-   :gen         dt-string-gen/gen-string-whitespace}
-  (dt-string/blank? value))
+(sd/def-spec :datatype.string/ascii-digits
+  {:pred dt-string/ascii-digits?
+   :gen dt-string-gen/gen-string-ascii-digits
+   :req :must-be-a-string-of-ascii-digits})
 
-(sd/def-validate-pred not-blank?
-  "Returns true if the provided value is a string containing non-whitespace
-  characters, else returns false."
-  [value]
-  {:requirement :must-be-a-non-blank-string
-   :gen         dt-string-gen/gen-string-non-whitespace}
-  (dt-string/not-blank? value))
+(sd/def-spec :datatype.string/lowercase-ascii-alphabetics
+  {:pred dt-string/lowercase-ascii-alphabetics?
+   :gen dt-string-gen/gen-string-lowercase-ascii-alphabetics
+   :req :must-be-a-string-of-lowercase-ascii-alphabetic-characters})
 
-(sd/def-validate-pred ascii-digits?
-  "Returns true if the provided value is a string containing zero or more
-  characters in the set [0-9], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-ascii-digits
-   :gen         dt-string-gen/gen-string-ascii-digits}
-  (dt-string/ascii-digits? value))
+(sd/def-spec :datatype.string/uppercase-ascii-alphabetics
+  {:pred dt-string/uppercase-ascii-alphabetics?
+   :gen dt-string-gen/gen-string-uppercase-ascii-alphabetics
+   :req :must-be-a-string-of-uppercase-ascii-alphabetic-characters})
 
-(sd/def-validate-pred lowercase-ascii-alphabetics?
-  "Returns true if the provided value is a string containing one or more
-  characters in the set [a-z], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-lowercase-ascii-alphabetic-characters
-   :gen         dt-string-gen/gen-string-lowercase-ascii-alphabetics}
-  (dt-string/lowercase-ascii-alphabetics? value))
+(sd/def-spec :datatype.string/ascii-alphabetics
+  {:pred dt-string/ascii-alphabetics?
+   :gen dt-string-gen/gen-string-ascii-alphabetics
+   :req :must-be-a-string-of-ascii-alphabetic-characters})
 
-(sd/def-validate-pred uppercase-ascii-alphabetics?
-  "Returns true if the provided value is a string containing one or more
-  characters in the set [A-Z], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-uppercase-ascii-alphabetic-characters
-   :gen         dt-string-gen/gen-string-uppercase-ascii-alphabetics}
-  (dt-string/uppercase-ascii-alphabetics? value))
+(sd/def-spec :datatype.string/lowercase-ascii-alphanumerics
+  {:pred dt-string/lowercase-ascii-alphanumerics?
+   :gen dt-string-gen/gen-string-lowercase-ascii-alphanumerics
+   :req :must-be-a-string-of-lowercase-ascii-alphanumeric-characters})
 
-(sd/def-validate-pred ascii-alphabetics?
-  "Returns true if the provided value is a string containing one or more
-  characters in the set [a-zA-Z], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-ascii-alphabetic-characters
-   :gen         dt-string-gen/gen-string-ascii-alphabetics}
-  (dt-string/ascii-alphabetics? value))
+(sd/def-spec :datatype.string/uppercase-ascii-alphanumerics
+  {:pred dt-string/uppercase-ascii-alphanumerics?
+   :gen dt-string-gen/gen-string-uppercase-ascii-alphanumerics
+   :req :must-be-a-string-of-uppercase-ascii-alphanumeric-characters})
 
-(sd/def-validate-pred lowercase-ascii-alphanumerics?
-  "Returns true if the provided value is a string containing one or more
-  characters in the set [a-z0-9], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-lowercase-ascii-alphanumeric-characters
-   :gen         dt-string-gen/gen-string-lowercase-ascii-alphanumerics}
-  (dt-string/lowercase-ascii-alphanumerics? value))
-
-(sd/def-validate-pred uppercase-ascii-alphanumerics?
-  "Returns true if the provided value is a string containing one or more
-  characters in the set [A-Z0-9], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-uppercase-ascii-alphanumeric-characters
-   :gen         dt-string-gen/gen-string-uppercase-ascii-alphanumerics}
-  (dt-string/uppercase-ascii-alphanumerics? value))
-
-(sd/def-validate-pred ascii-alphanumerics?
-  "Returns true if the provided value is a string containing one or more
-  characters in the set [a-zA-Z0-9], else returns false."
-  [value]
-  {:requirement :must-be-a-string-of-ascii-alphanumeric-characters
-   :gen         dt-string-gen/gen-string-ascii-alphanumerics}
-  (dt-string/ascii-alphanumerics? value))
+(sd/def-spec :datatype.string/ascii-alphanumerics
+  {:pred dt-string/ascii-alphanumerics?
+   :gen dt-string-gen/gen-string-ascii-alphanumerics
+   :req :must-be-a-string-of-ascii-alphanumeric-characters})

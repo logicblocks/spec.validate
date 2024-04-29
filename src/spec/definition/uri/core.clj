@@ -5,13 +5,7 @@
 
    [spec.definition.core :as sd]))
 
-(declare
-  http-uri-string?)
-
-(sd/def-validate-pred http-uri-string?
-  "Returns true if the provided value is a string representing a URI with an
-  http or https scheme, else returns false."
-  [value]
-  {:requirement :must-be-an-http-uri-string
-   :gen         #(dt-uri-gen/gen-absolute-uri {:schemes #{:http :https}})}
-  (dt-uri/http-uri-string? value))
+(sd/def-spec :datatype.uri/http-uri-string
+  {:pred dt-uri/http-uri-string?
+   :gen #(dt-uri-gen/gen-absolute-uri {:schemes #{:http :https}})
+   :req :must-be-an-http-uri-string})

@@ -42,3 +42,9 @@
      (when ~(:gen options)
        (extend-pred-with-gen ~sym
          ~(:gen options)))))
+
+(defmacro def-spec [k opts]
+  (let [{:keys [pred gen req]} opts]
+    `(do
+       (spec/def ~k (spec/spec ~pred :gen ~gen))
+       (extend-pred-with-requirement '~(symbol (resolve pred)) ~req))))

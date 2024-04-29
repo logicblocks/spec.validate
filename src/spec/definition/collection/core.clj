@@ -5,74 +5,26 @@
 
    [spec.definition.core :as sd]))
 
-(declare
-  empty?
-  not-empty?
+(sd/def-spec :datatype.collection/non-empty
+  {:pred dt-collection/not-empty?
+   :req :must-not-be-empty})
 
-  length-equal-to?
-  length-equal-to-1?
-  length-equal-to-2?
-  length-equal-to-3?
-  length-equal-to-4?
-  length-equal-to-5?
-  length-equal-to-6?
-  length-equal-to-7?
-  length-equal-to-8?
-  length-equal-to-9?
-  length-equal-to-10?
-
-  length-less-than?
-  length-less-than-1?
-  length-less-than-2?
-  length-less-than-3?
-  length-less-than-4?
-  length-less-than-5?
-  length-less-than-6?
-  length-less-than-7?
-  length-less-than-8?
-  length-less-than-9?
-  length-less-than-10?
-
-  length-greater-than?
-  length-greater-than-1?
-  length-greater-than-2?
-  length-greater-than-3?
-  length-greater-than-4?
-  length-greater-than-5?
-  length-greater-than-6?
-  length-greater-than-7?
-  length-greater-than-8?
-  length-greater-than-9?
-  length-greater-than-10?)
-
-(sd/def-validate-pred not-empty?
-  "Returns true if the provided value has a count of at least 1, else returns
-  false."
-  [value]
-  {:requirement :must-not-be-empty}
-  (dt-collection/not-empty? value))
-
-(sd/def-validate-pred empty?
-  "Returns true if the provided value has a count of zero, else returns
-  false."
-  [value]
-  {:requirement :must-be-empty}
-  (dt-collection/empty? value))
+(sd/def-spec :datatype.collection/empty
+  {:pred dt-collection/empty?
+   :req :must-be-empty})
 
 (sd/extend-pred-with-requirement
   'clojure.core/empty?
   :must-be-empty)
 
 (defmacro def-length-equal-to-pred [len pred]
-  (let [name (symbol (str "length-equal-to-" len "?"))
-        doc (str "Returns true if the provided value has a count of exactly "
-              len ", else returns false.")
-        req (keyword (str "must-have-length-equal-to-" len))]
-    `(sd/def-validate-pred ~name
-       ~doc
-       [value#]
-       {:requirement ~req}
-       (~pred value#))))
+  (let [k (keyword "datatype.collection" (str "length-equal-to-" len))
+        req (keyword (str "must-have-length-equal-to-" len))
+        pred (symbol "datatype.collection.core"
+               (str "length-equal-to-" len "?"))]
+    `(sd/def-spec ~k
+       {:pred ~pred
+        :req ~req})))
 
 (def-length-equal-to-pred 1 dt-collection/length-equal-to-1?)
 (def-length-equal-to-pred 2 dt-collection/length-equal-to-2?)
@@ -86,15 +38,13 @@
 (def-length-equal-to-pred 10 dt-collection/length-equal-to-10?)
 
 (defmacro def-length-less-than-pred [len pred]
-  (let [name (symbol (str "length-less-than-" len "?"))
-        doc (str "Returns true if the provided value has a count less than "
-              len ", else returns false.")
-        req (keyword (str "must-have-length-less-than-" len))]
-    `(sd/def-validate-pred ~name
-       ~doc
-       [value#]
-       {:requirement ~req}
-       (~pred value#))))
+  (let [k (keyword "datatype.collection" (str "length-less-than-" len))
+        req (keyword (str "must-have-length-less-than-" len))
+        pred (symbol "datatype.collection.core"
+               (str "length-less-than-" len "?"))]
+    `(sd/def-spec ~k
+       {:pred ~pred
+        :req ~req})))
 
 (def-length-less-than-pred 1 dt-collection/length-less-than-1?)
 (def-length-less-than-pred 2 dt-collection/length-less-than-2?)
@@ -108,15 +58,13 @@
 (def-length-less-than-pred 10 dt-collection/length-less-than-10?)
 
 (defmacro def-length-greater-than-pred [len pred]
-  (let [name (symbol (str "length-greater-than-" len "?"))
-        doc (str "Returns true if the provided value has a count greater than "
-              len ", else returns false.")
-        req (keyword (str "must-have-length-greater-than-" len))]
-    `(sd/def-validate-pred ~name
-       ~doc
-       [value#]
-       {:requirement ~req}
-       (~pred value#))))
+  (let [k (keyword "datatype.collection" (str "length-greater-than-" len))
+        req (keyword (str "must-have-length-greater-than-" len))
+        pred (symbol "datatype.collection.core"
+               (str "length-greater-than-" len "?"))]
+    `(sd/def-spec ~k
+       {:pred ~pred
+        :req ~req})))
 
 (def-length-greater-than-pred 1 dt-collection/length-greater-than-1?)
 (def-length-greater-than-pred 2 dt-collection/length-greater-than-2?)
