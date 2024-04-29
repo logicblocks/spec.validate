@@ -18,8 +18,7 @@
             [lein-bikeshed "0.5.2"]
             [jonase/eastwood "1.4.0"]]
 
-  :dependencies [[io.logicblocks/datatype "0.0.1-RC5"]
-                 [io.logicblocks/icu4clj "0.0.1-RC2"]]
+  :dependencies [[io.logicblocks/datatype "0.0.1-RC5"]]
 
   :profiles
   {:shared
@@ -27,6 +26,8 @@
    {:dependencies
     [[org.clojure/clojure "1.11.1"]
      [org.clojure/test.check "1.1.1"]
+
+     [io.logicblocks/icu4clj "0.0.1-RC2"]
 
      [com.github.flow-storm/clojure "1.11.2-4"]
      [com.github.flow-storm/flow-storm-dbg "3.15.1"]
