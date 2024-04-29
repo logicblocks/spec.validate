@@ -18,7 +18,7 @@
             [lein-bikeshed "0.5.2"]
             [jonase/eastwood "1.4.0"]]
 
-  :dependencies [[io.logicblocks/datatype "0.0.1-RC3"]
+  :dependencies [[io.logicblocks/datatype "0.0.1-RC5"]
                  [io.logicblocks/icu4clj "0.0.1-RC2"]]
 
   :profiles
