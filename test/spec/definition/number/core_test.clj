@@ -4,9 +4,10 @@
    [clojure.spec.gen.alpha :as gen]
    [clojure.test :refer [deftest is testing]]
 
+   [datatype.support :as dts]
+
    [spec.validate.core :as sv-core]
 
-   [spec.definition.core :as sd]
    [spec.definition.number.core]
 
    [datatype.testing.cases :as dt-test-cases])
@@ -113,7 +114,9 @@
 
   (testing "generates integer strings"
     (let [samples (gen/sample (spec/gen :datatype.number/integer-string))
-          pred #(or (= "0" %) (sd/re-satisfies? #"^[-+]?[1-9]\d*$" %))]
+          pred #(or
+                  (dts/re-satisfies? #"^[-+]?0$" %)
+                  (dts/re-satisfies? #"^[-+]?[1-9]\d*$" %))]
       (is (every? true? (map pred samples))
         (str "mismatching samples: "
           (filterv #(not (pred %)) samples))))))
@@ -122,6 +125,186 @@
   (is (= :must-be-an-integer-string
         (sv-core/pred-requirement
           'datatype.number.core/integer-string?))))
+
+(deftest positive-integer-string-spec-validation
+  (testing "general cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/positive-integer-string)
+      (dt-test-cases/true-case "integer strings without sign"
+        :samples ["1" "10" "25" "10000000" (str Integer/MAX_VALUE)])
+      (dt-test-cases/true-case "integer strings with plus sign"
+        :samples ["+1" "+10" "+25" "+10000000" (str "+" Integer/MAX_VALUE)])
+      (dt-test-cases/false-case "zero"
+        :samples ["0" "+0" "-0"])
+      (dt-test-cases/false-case "integer strings with minus sign"
+        :samples ["-1" "-10" "-25" "-10000000" (str Integer/MIN_VALUE)])
+      (dt-test-cases/false-case "any non-base 10 integer as a string"
+        :samples ["0xff" "035" "2r1011" "7N" "36rCRAZY"])
+      (dt-test-cases/false-case "many zeroes"
+        :samples ["00", "0000000"])
+      (dt-test-cases/false-case "leading zeroes"
+        :samples ["00123" "+00123" "-00123"])
+      (dt-test-cases/false-case "multiple leading signs"
+        :samples ["+-123" "-+45" "--0" "++10" "+-+23"])
+      (dt-test-cases/false-case "any integer"
+        :samples [0 35 -35
+                  0xff 017 2r1011 7N 36rCRAZY
+                  Integer/MIN_VALUE
+                  Integer/MAX_VALUE])
+      (dt-test-cases/false-case "a decimal" :sample 35.23)
+      (dt-test-cases/false-case "a non-numeric string"
+        :sample "not-an-integer")
+      (dt-test-cases/false-case "a non-string"
+        :samples [true false #{1 2 3}])
+      (dt-test-cases/false-case "an empty string"
+        :sample "")
+      (dt-test-cases/false-case "nil" :sample nil)))
+
+  (testing "locale specific cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/positive-integer-string)
+      (dt-test-cases/true-case
+        "an integer string with correct thousands separator for the UK"
+        :samples ["1,000" "10,000" "100,000" "1,000,000"]
+        :locale (Locale/UK))
+      (dt-test-cases/false-case
+        "an integer string with incorrect thousands separator for the UK"
+        :samples ["1.000" "10.000" "100.000" "1.000.000"]
+        :locale (Locale/UK))
+      (dt-test-cases/true-case
+        "an integer string with correct thousands separator for Germany"
+        :samples ["1.000" "10.000" "100.000" "1.000.000"]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/false-case
+        "an integer string with incorrect thousands separator for Germany"
+        :samples ["1,000" "10,000" "100,000" "1,000,000"]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/true-case
+        "an integer string with thousands separator in the wrong place"
+        :samples ["1,0" "1,00,0000"]
+        :locale (Locale/UK)
+        :note "TODO: This is treated as valid but shouldn't be...")
+      (dt-test-cases/false-case "a decimal string"
+        :sample "35.23"
+        :locale (Locale/UK)))))
+
+(deftest positive-integer-string-spec-generation
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen :datatype.number/positive-integer-string)
+              100)))))
+
+  (testing "does not generate empty string"
+    (is (every? false?
+          (map #(= "" %)
+            (gen/sample
+              (spec/gen :datatype.number/positive-integer-string)
+              100)))))
+
+  (testing "generates positive integer strings"
+    (let [samples
+          (gen/sample (spec/gen :datatype.number/positive-integer-string))
+          pred #(dts/re-satisfies? #"^[+]?[1-9]\d*$" %)]
+      (is (every? true? (map pred samples))
+        (str "mismatching samples: "
+          (filterv #(not (pred %)) samples))))))
+
+(deftest positive-integer-string-pred-requirement
+  (is (= :must-be-a-positive-integer-string
+        (sv-core/pred-requirement
+          'datatype.number.core/positive-integer-string?))))
+
+(deftest negative-integer-string-spec-validation
+  (testing "general cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/negative-integer-string)
+      (dt-test-cases/true-case "integer strings with minus sign"
+        :samples ["-1" "-10" "-25" "-10000000" (str Integer/MIN_VALUE)])
+      (dt-test-cases/false-case "zero"
+        :samples ["0" "+0" "-0"])
+      (dt-test-cases/false-case "integer strings without sign"
+        :samples ["1" "10" "25" "10000000" (str Integer/MAX_VALUE)])
+      (dt-test-cases/false-case "integer strings with plus sign"
+        :samples ["+1" "+10" "+25" "+10000000" (str "+" Integer/MAX_VALUE)])
+      (dt-test-cases/false-case "any non-base 10 integer as a string"
+        :samples ["0xff" "035" "2r1011" "7N" "36rCRAZY"])
+      (dt-test-cases/false-case "many zeroes"
+        :samples ["00", "0000000"])
+      (dt-test-cases/false-case "leading zeroes"
+        :samples ["00123" "+00123" "-00123"])
+      (dt-test-cases/false-case "multiple leading signs"
+        :samples ["+-123" "-+45" "--0" "++10" "+-+23"])
+      (dt-test-cases/false-case "any integer"
+        :samples [0 35 -35
+                  0xff 017 2r1011 7N 36rCRAZY
+                  Integer/MIN_VALUE
+                  Integer/MAX_VALUE])
+      (dt-test-cases/false-case "a decimal" :sample 35.23)
+      (dt-test-cases/false-case "a non-numeric string"
+        :sample "not-an-integer")
+      (dt-test-cases/false-case "a non-string"
+        :samples [true false #{1 2 3}])
+      (dt-test-cases/false-case "an empty string"
+        :sample "")
+      (dt-test-cases/false-case "nil" :sample nil)))
+
+  (testing "locale specific cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/negative-integer-string)
+      (dt-test-cases/true-case
+        "an integer string with correct thousands separator for the UK"
+        :samples ["-1,000" "-10,000" "-100,000" "-1,000,000"]
+        :locale (Locale/UK))
+      (dt-test-cases/false-case
+        "an integer string with incorrect thousands separator for the UK"
+        :samples ["-1.000" "-10.000" "-100.000" "-1.000.000"]
+        :locale (Locale/UK))
+      (dt-test-cases/true-case
+        "an integer string with correct thousands separator for Germany"
+        :samples ["-1.000" "-10.000" "-100.000" "-1.000.000"]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/false-case
+        "an integer string with incorrect thousands separator for Germany"
+        :samples ["-1,000" "-10,000" "-100,000" "-1,000,000"]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/true-case
+        "an integer string with thousands separator in the wrong place"
+        :samples ["-1,0" "-1,00,0000"]
+        :locale (Locale/UK)
+        :note "TODO: This is treated as valid but shouldn't be...")
+      (dt-test-cases/false-case "a decimal string"
+        :sample "-35.23"
+        :locale (Locale/UK)))))
+
+(deftest negative-integer-string-spec-generation
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen :datatype.number/negative-integer-string)
+              100)))))
+
+  (testing "does not generate empty string"
+    (is (every? false?
+          (map #(= "" %)
+            (gen/sample
+              (spec/gen :datatype.number/negative-integer-string)
+              100)))))
+
+  (testing "generates negative integer strings"
+    (let [samples (gen/sample
+                    (spec/gen :datatype.number/negative-integer-string))
+          pred #(dts/re-satisfies? #"^-[1-9]\d*$" %)]
+      (is (every? true? (map pred samples))
+        (str "mismatching samples: "
+          (filterv #(not (pred %)) samples))))))
+
+(deftest negative-integer-string-pred-requirement
+  (is (= :must-be-a-negative-integer-string
+        (sv-core/pred-requirement
+          'datatype.number.core/negative-integer-string?))))
 
 (deftest floating-point-number-spec-validation
   (dt-test-cases/assert-cases-satisfied-by
@@ -263,6 +446,212 @@
   (is (= :must-be-a-decimal-string
         (sv-core/pred-requirement
           'datatype.number.core/decimal-string?))))
+
+(deftest positive-decimal-string-spec-validation
+  (testing "general cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/positive-decimal-string)
+      (dt-test-cases/true-case "any positive decimal as a string with no sign"
+        :samples ["0.82" "35." "35" "2.78" ".91"])
+      (dt-test-cases/true-case "any decimal as a string with a plus sign"
+        :samples ["+0.82" "+35." "+35" "+.72"])
+      (dt-test-cases/false-case "any decimal as a string with a minus sign"
+        :samples ["-0.82" "-35." "-35" "-.72"])
+      (dt-test-cases/false-case "zero"
+        :samples ["0" "-0" "+0" "0." "-0." "+0."
+                  "0.00" "-0.0000" "+0.000"])
+      (dt-test-cases/false-case "any non-base 10 integer as a string"
+        :samples ["0xff" "035" "2r1011" "7N" "36rCRAZY"])
+      (dt-test-cases/false-case "many zeroes"
+        :samples ["00", "0000000"])
+      (dt-test-cases/false-case "leading zeroes"
+        :samples ["00123" "00.123" "000.456"])
+      (dt-test-cases/false-case "multiple leading signs"
+        :samples ["+-123.4" "-+45" "--0.23" "++10.0" "+-+23.456"])
+      (dt-test-cases/false-case "any integer"
+        :samples [0 35 -35
+                  0xff 017 2r1011 7N 36rCRAZY
+                  Integer/MIN_VALUE
+                  Integer/MAX_VALUE])
+      (dt-test-cases/false-case "a floating point number" :sample 35.23)
+      (dt-test-cases/false-case "a non-numeric string"
+        :sample "not-a-decimal")
+      (dt-test-cases/false-case "a non-string"
+        :samples [true false #{1 2 3}])
+      (dt-test-cases/false-case "an empty string"
+        :sample "")
+      (dt-test-cases/false-case "nil" :sample nil)))
+
+  (testing "locale specific cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/positive-decimal-string)
+      (dt-test-cases/true-case
+        "a decimal string with correct thousands separator for the UK"
+        :samples ["1,000.456" "10,000" "100,000.1" "1,000,000."]
+        :locale (Locale/UK))
+      (dt-test-cases/false-case
+        "a decimal string with incorrect thousands separator for the UK"
+        :samples ["1.000,56" "10.000," "100.000,1" "1.000.000,"]
+        :locale (Locale/UK))
+      (dt-test-cases/true-case
+        "a decimal string with correct thousands separator for Germany"
+        :samples ["1.000,123" "10.000" "100.000,4" "1.000.000,"]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/false-case
+        "a decimal string with incorrect thousands separator for Germany"
+        :samples ["1,000.456" "10,000.0" "100,000.1" "1,000,000."]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/true-case
+        "a decimal string with correct thousands separator for France"
+        :samples ["1 000,456"
+                  "10 000,0"
+                  "100 000,1"
+                  "1 000 000,"]
+        :locale (Locale/FRANCE))
+      (dt-test-cases/false-case
+        "a decimal string with incorrect thousands separator for France"
+        :samples ["1,000.123" "10.000,0" "100,000.4" "1.000.000,"]
+        :locale (Locale/FRANCE))
+      (dt-test-cases/true-case
+        "a decimal string with thousands separator in the wrong place"
+        :samples ["1,0.1" "1,00,0000."]
+        :locale (Locale/UK)
+        :note "TODO: This is treated as valid but shouldn't be..."))))
+
+(deftest positive-decimal-string-spec-generation
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen :datatype.number/positive-decimal-string)
+              100)))))
+
+  (testing "does not generate empty string"
+    (is (every? false?
+          (map #(= "" %)
+            (gen/sample
+              (spec/gen :datatype.number/positive-decimal-string)
+              100)))))
+
+  (testing "generates positive decimal strings"
+    (let [samples (gen/sample
+                    (spec/gen :datatype.number/positive-decimal-string))
+          positive-floating-point?
+          (fn [x]
+            (try
+              (pos? (parse-double x))
+              (catch Exception _ false)))]
+      (is (every? true? (map positive-floating-point? samples))
+        (str "mismatching samples: "
+          (filterv #(not (positive-floating-point? %)) samples))))))
+
+(deftest positive-decimal-string-pred-requirement
+  (is (= :must-be-a-positive-decimal-string
+        (sv-core/pred-requirement
+          'datatype.number.core/positive-decimal-string?))))
+
+(deftest negative-decimal-string-spec-validation
+  (testing "general cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/negative-decimal-string)
+      (dt-test-cases/true-case "any decimal as a string with a minus sign"
+        :samples ["-0.82" "-35." "-35" "-.72"])
+      (dt-test-cases/false-case "any positive decimal as a string with no sign"
+        :samples ["0.82" "35." "35" "2.78" ".91"])
+      (dt-test-cases/false-case "any decimal as a string with a plus sign"
+        :samples ["+0.82" "+35." "+35" "+.72"])
+      (dt-test-cases/false-case "zero"
+        :samples ["0" "-0" "+0" "0." "-0." "+0."
+                  "0.00" "-0.0000" "+0.000"])
+      (dt-test-cases/false-case "any non-base 10 integer as a string"
+        :samples ["0xff" "035" "2r1011" "7N" "36rCRAZY"])
+      (dt-test-cases/false-case "many zeroes"
+        :samples ["00", "0000000"])
+      (dt-test-cases/false-case "leading zeroes"
+        :samples ["00123" "00.123" "000.456"])
+      (dt-test-cases/false-case "multiple leading signs"
+        :samples ["+-123.4" "-+45" "--0.23" "++10.0" "+-+23.456"])
+      (dt-test-cases/false-case "any integer"
+        :samples [0 35 -35
+                  0xff 017 2r1011 7N 36rCRAZY
+                  Integer/MIN_VALUE
+                  Integer/MAX_VALUE])
+      (dt-test-cases/false-case "a floating point number" :sample 35.23)
+      (dt-test-cases/false-case "a non-numeric string"
+        :sample "not-a-decimal")
+      (dt-test-cases/false-case "a non-string"
+        :samples [true false #{1 2 3}])
+      (dt-test-cases/false-case "an empty string"
+        :sample "")
+      (dt-test-cases/false-case "nil" :sample nil)))
+
+  (testing "locale specific cases"
+    (dt-test-cases/assert-cases-satisfied-by
+      (partial spec/valid? :datatype.number/negative-decimal-string)
+      (dt-test-cases/true-case
+        "a decimal string with correct thousands separator for the UK"
+        :samples ["-1,000.456" "-10,000" "-100,000.1" "-1,000,000."]
+        :locale (Locale/UK))
+      (dt-test-cases/false-case
+        "a decimal string with incorrect thousands separator for the UK"
+        :samples ["-1.000,56" "-10.000," "-100.000,1" "-1.000.000,"]
+        :locale (Locale/UK))
+      (dt-test-cases/true-case
+        "a decimal string with correct thousands separator for Germany"
+        :samples ["-1.000,123" "-10.000" "-100.000,4" "-1.000.000,"]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/false-case
+        "a decimal string with incorrect thousands separator for Germany"
+        :samples ["-1,000.456" "-10,000.0" "-100,000.1" "-1,000,000."]
+        :locale (Locale/GERMANY))
+      (dt-test-cases/true-case
+        "a decimal string with correct thousands separator for France"
+        :samples ["-1 000,456"
+                  "-10 000,0"
+                  "-100 000,1"
+                  "-1 000 000,"]
+        :locale (Locale/FRANCE))
+      (dt-test-cases/false-case
+        "a decimal string with incorrect thousands separator for France"
+        :samples ["-1,000.123" "-10.000,0" "-100,000.4" "-1.000.000,"]
+        :locale (Locale/FRANCE))
+      (dt-test-cases/true-case
+        "a decimal string with thousands separator in the wrong place"
+        :samples ["-1,0.1" "-1,00,0000."]
+        :locale (Locale/UK)
+        :note "TODO: This is treated as valid but shouldn't be..."))))
+
+(deftest negative-decimal-string-spec-generation
+  (testing "does not generate nil"
+    (is (every? false?
+          (map nil?
+            (gen/sample
+              (spec/gen :datatype.number/negative-decimal-string)
+              100)))))
+
+  (testing "does not generate empty string"
+    (is (every? false?
+          (map #(= "" %)
+            (gen/sample
+              (spec/gen :datatype.number/negative-decimal-string)
+              100)))))
+
+  (testing "generates negative decimal strings"
+    (let [samples (gen/sample
+                    (spec/gen :datatype.number/negative-decimal-string))
+          negative-floating-point?
+          (fn [x]
+            (try
+              (neg? (parse-double x))
+              (catch Exception _ false)))]
+      (is (every? true? (map negative-floating-point? samples))
+        (str "mismatching samples: "
+          (filterv #(not (negative-floating-point? %)) samples))))))
+
+(deftest negative-decimal-string-pred-requirement
+  (is (= :must-be-a-negative-decimal-string
+        (sv-core/pred-requirement
+          'datatype.number.core/negative-decimal-string?))))
 
 (deftest positive-number-spec-validation
   (dt-test-cases/assert-cases-satisfied-by

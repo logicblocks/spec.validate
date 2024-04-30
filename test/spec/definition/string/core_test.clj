@@ -6,14 +6,14 @@
    [clojure.spec.gen.alpha :as gen]
    [clojure.spec.alpha :as spec]
 
+   [datatype.support :as dts]
+
    [icu4clj.text.string :as icu-ts]
    [icu4clj.text.unicode-characters :as icu-tuc]
    [icu4clj.text.unicode-set :as icu-tus]
    [icu4clj.text.unicode-set-patterns :as icu-tusp]
 
    [spec.validate.core :as sv-core]
-
-   [spec.definition.core :as sd]
    [spec.definition.string.core]
 
    [datatype.testing.cases :as dt-test-cases]))
@@ -94,7 +94,7 @@
 
 (deftest string-spec-generation
   (is (every? true?
-        (map #(sd/re-satisfies? #"^\w*$" %)
+        (map #(dts/re-satisfies? #"^\w*$" %)
           (gen/sample (spec/gen :datatype.string/string))))))
 
 (deftest string-pred-requirement
@@ -223,7 +223,7 @@
 
   (testing "generates only ASCII digit strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^\d+$" %)
+          (map #(dts/re-satisfies? #"^\d+$" %)
             (gen/sample (spec/gen :datatype.string/ascii-digits) 100))))))
 
 (deftest ascii-digits-pred-requirement
@@ -269,7 +269,7 @@
 
   (testing "generates only lowercase ASCII alphabetic strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^[a-z]+$" %)
+          (map #(dts/re-satisfies? #"^[a-z]+$" %)
             (gen/sample
               (spec/gen :datatype.string/lowercase-ascii-alphabetics) 100))))))
 
@@ -316,7 +316,7 @@
 
   (testing "generates only uppercase ASCII alphabetic strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^[A-Z]+$" %)
+          (map #(dts/re-satisfies? #"^[A-Z]+$" %)
             (gen/sample
               (spec/gen :datatype.string/uppercase-ascii-alphabetics) 100))))))
 
@@ -360,7 +360,7 @@
 
   (testing "generates only ASCII alphabetic strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^[a-zA-Z]+$" %)
+          (map #(dts/re-satisfies? #"^[a-zA-Z]+$" %)
             (gen/sample (spec/gen :datatype.string/ascii-alphabetics) 100))))))
 
 (deftest ascii-alphabetics-pred-requirement
@@ -408,7 +408,7 @@
 
   (testing "generates only lowercase ASCII alphanumeric strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^[a-z0-9]+$" %)
+          (map #(dts/re-satisfies? #"^[a-z0-9]+$" %)
             (gen/sample
               (spec/gen :datatype.string/lowercase-ascii-alphanumerics)
               100))))))
@@ -458,7 +458,7 @@
 
   (testing "generates only uppercase ASCII alphanumeric strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^[A-Z0-9]+$" %)
+          (map #(dts/re-satisfies? #"^[A-Z0-9]+$" %)
             (gen/sample
               (spec/gen :datatype.string/uppercase-ascii-alphanumerics)
               100))))))
@@ -507,7 +507,7 @@
 
   (testing "generates only ASCII alphabetic strings"
     (is (every? true?
-          (map #(sd/re-satisfies? #"^[a-zA-Z0-9]+$" %)
+          (map #(dts/re-satisfies? #"^[a-zA-Z0-9]+$" %)
             (gen/sample
               (spec/gen :datatype.string/ascii-alphanumerics) 100))))))
 

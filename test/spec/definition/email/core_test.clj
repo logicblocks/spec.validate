@@ -6,12 +6,12 @@
    [clojure.string :as string]
    [clojure.test :refer [deftest is testing]]
 
+   [datatype.support :as dts]
    [datatype.domain.core :as dt-domain]
 
    [icu4clj.text.unicode-set :as icu-tus]
    [spec.validate.core :as sv-core]
 
-   [spec.definition.core :as sd]
    [spec.definition.email.core]
 
    [datatype.testing.cases :as dt-test-cases]))
@@ -171,7 +171,7 @@
               email-addresses))]
       (is (every?
             (fn [sld]
-              (sd/re-satisfies?
+              (dts/re-satisfies?
                 #"^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$"
                 sld))
             second-level-domain-labels))))

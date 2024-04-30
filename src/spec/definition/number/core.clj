@@ -30,6 +30,16 @@
    :gen  dt-number-gen/gen-integer-string
    :req  :must-be-an-integer-string})
 
+(sd/def-spec :datatype.number/positive-integer-string
+  {:pred dt-number/positive-integer-string?
+   :gen  dt-number-gen/gen-positive-integer-string
+   :req  :must-be-a-positive-integer-string})
+
+(sd/def-spec :datatype.number/negative-integer-string
+  {:pred dt-number/negative-integer-string?
+   :gen  dt-number-gen/gen-negative-integer-string
+   :req  :must-be-a-negative-integer-string})
+
 (sd/def-spec :datatype.number/floating-point-number
   {:pred clojure.core/float?
    :gen  #(gen/gen-for-pred clojure.core/float?)
@@ -39,6 +49,16 @@
   {:pred dt-number/decimal-string?
    :gen  dt-number-gen/gen-decimal-string
    :req  :must-be-a-decimal-string})
+
+(sd/def-spec :datatype.number/positive-decimal-string
+  {:pred dt-number/positive-decimal-string?
+   :gen  dt-number-gen/gen-positive-decimal-string
+   :req  :must-be-a-positive-decimal-string})
+
+(sd/def-spec :datatype.number/negative-decimal-string
+  {:pred dt-number/negative-decimal-string?
+   :gen  dt-number-gen/gen-negative-decimal-string
+   :req  :must-be-a-negative-decimal-string})
 
 (sd/def-spec :datatype.number/positive-number
   {:pred positive?
