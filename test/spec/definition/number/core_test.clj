@@ -723,7 +723,7 @@
 (deftest positive-number-pred-requirement
   (is (= :must-be-a-positive-number
         (sv-core/pred-requirement
-          'spec.definition.number.core/positive?))))
+          'datatype.number.core/positive?))))
 
 (deftest negative-number-spec-validation
   (dt-test-cases/assert-cases-satisfied-by
@@ -795,7 +795,7 @@
 (deftest negative-number-pred-requirement
   (is (= :must-be-a-negative-number
         (sv-core/pred-requirement
-          'spec.definition.number.core/negative?))))
+          'datatype.number.core/negative?))))
 
 (deftest zero-number-spec-validation
   (dt-test-cases/assert-cases-satisfied-by
@@ -867,4 +867,4 @@
 (deftest zero-number-pred-requirement
   (is (= :must-be-zero
         (sv-core/pred-requirement
-          'spec.definition.number.core/zero?))))
+          'datatype.number.core/zero?))))

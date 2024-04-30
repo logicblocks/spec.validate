@@ -8,18 +8,6 @@
 
    [spec.definition.core :as sd]))
 
-(defn positive? [value]
-  (sd/exception->false
-    (clojure.core/pos? value)))
-
-(defn negative? [value]
-  (sd/exception->false
-    (clojure.core/neg? value)))
-
-(defn zero? [value]
-  (sd/exception->false
-    (clojure.core/zero? value)))
-
 (sd/def-spec :datatype.number/integer-number
   {:pred clojure.core/integer?
    :gen  #(gen/gen-for-pred clojure.core/integer?)
@@ -61,16 +49,16 @@
    :req  :must-be-a-negative-decimal-string})
 
 (sd/def-spec :datatype.number/positive-number
-  {:pred positive?
-   :gen  #(gen/gen-for-pred pos-int?)
+  {:pred dt-number/positive?
+   :gen  dt-number-gen/gen-positive-number
    :req  :must-be-a-positive-number})
 
 (sd/def-spec :datatype.number/negative-number
-  {:pred negative?
-   :gen  #(gen/gen-for-pred neg-int?)
+  {:pred dt-number/negative?
+   :gen  dt-number-gen/gen-negative-number
    :req  :must-be-a-negative-number})
 
 (sd/def-spec :datatype.number/zero-number
-  {:pred zero?
-   :gen  #(gen/gen-for-pred clojure.core/zero?)
+  {:pred dt-number/zero?
+   :gen  dt-number-gen/gen-zero-number
    :req  :must-be-zero})
