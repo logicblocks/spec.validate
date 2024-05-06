@@ -75,7 +75,7 @@
   (spec/keys
     :req-un [::some-object ::other-object]))
 
-(deftest about-validator-for
+(deftest validator
   (testing "when there are no problems"
     (let [target {:some-string      "correct"
                   :some-number      50
@@ -88,7 +88,7 @@
           valid? (sv-core/validator ::some-object)]
       (is (false? (valid? target))))))
 
-(deftest about-problem-calculator-for
+(deftest problem-calculator
   (testing "when there are no problems"
     (let [target {:some-string      "correct"
                   :some-number      50
@@ -221,26 +221,53 @@
                :requirements [:must-be-present]}]
             (calculate-problems target)))))
 
-  (testing "allows validation subject to be overridden"
+  (testing "allows subject to be overridden with value"
     (let [target {:some-string      "correct"
                   :some-number      "oops"
                   :some-large-value 10}
           calculate-problems
           (sv-core/problem-calculator ::some-object
-            {:validation-subject :the-object})]
+            {:subject :the-object})]
       (is (= [{:subject      :the-object
                :field        [:some-number]
                :type         :invalid
                :requirements [:must-be-a-number]}]
             (calculate-problems target)))))
 
-  (testing "allows a problem transformer to be provided"
+  (testing "allows subject to be overridden with function"
     (let [target {:some-string      "correct"
                   :some-number      "oops"
                   :some-large-value 10}
           calculate-problems
           (sv-core/problem-calculator ::some-object
-            {:problem-transformer
+            {:subject (fn [spec val]
+                        (str (name spec) "-" (hash val)))})]
+      (is (= [{:subject      (str "some-object-" (hash target))
+               :field        [:some-number]
+               :type         :invalid
+               :requirements [:must-be-a-number]}]
+            (calculate-problems target)))))
+
+  (testing "uses spec name as subject when provided subject is nil"
+    (let [target {:some-string      "correct"
+                  :some-number      "oops"
+                  :some-large-value 10}
+          calculate-problems
+          (sv-core/problem-calculator ::some-object
+            {:subject nil})]
+      (is (= [{:subject      :some-object
+               :field        [:some-number]
+               :type         :invalid
+               :requirements [:must-be-a-number]}]
+            (calculate-problems target)))))
+
+  (testing "allows a transformer to be provided"
+    (let [target {:some-string      "correct"
+                  :some-number      "oops"
+                  :some-large-value 10}
+          calculate-problems
+          (sv-core/problem-calculator ::some-object
+            {:transformer
              (fn [problem]
                (merge
                  (select-keys problem [:subject :field :requirements])
@@ -250,5 +277,18 @@
                :subject      :some-object
                :field        [:some-number]
                :problem      :invalid
+               :requirements [:must-be-a-number]}]
+            (calculate-problems target)))))
+
+  (testing "performs no transformation when provided transformer is nil"
+    (let [target {:some-string      "correct"
+                  :some-number      "oops"
+                  :some-large-value 10}
+          calculate-problems
+          (sv-core/problem-calculator ::some-object
+            {:transformer nil})]
+      (is (= [{:subject      :some-object
+               :field        [:some-number]
+               :type         :invalid
                :requirements [:must-be-a-number]}]
             (calculate-problems target))))))

@@ -29,12 +29,14 @@
 
 (defn problem-calculator
   ([spec & {:as options}]
-   (let [{:keys [validation-subject
-                 problem-transformer]
-          :or   {validation-subject  (keyword (name spec))
-                 problem-transformer identity}} options]
-     (fn [validation-target]
-       (let [context (spec/explain-data spec validation-target)]
+   (let [subject (get options :subject)
+         subject (cond
+                   (nil? subject) (fn [_ _] (keyword (name spec)))
+                   (fn? subject) subject
+                   :else (fn [_ _] subject))
+         transformer (or (:transformer options) identity)]
+     (fn [target]
+       (let [context (spec/explain-data spec target)]
          (reduce
            (fn [accumulator problem]
              (let [pred (:pred problem)
@@ -51,9 +53,9 @@
                       :invalid
                       (pred-requirement pred)])]
                (conj accumulator
-                 (problem-transformer
+                 (transformer
                    {:type         type
-                    :subject      validation-subject
+                    :subject      (subject spec target)
                     :field        path-to-field
                     :requirements [requirement]}))))
            []
